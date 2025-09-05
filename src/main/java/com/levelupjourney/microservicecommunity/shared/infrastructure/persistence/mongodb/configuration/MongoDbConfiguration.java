@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
  * Configures MongoDB client and enables repositories.
  */
 @Configuration
-@EnableMongoRepositories(basePackages = "com.levelupjourney.microservicecommunity.bounded.infrastructure.persistence.mongodb.repositories")
+@EnableMongoRepositories(basePackages = "com.levelupjourney.microservicecommunity")
 public class MongoDbConfiguration extends AbstractMongoClientConfiguration {
 
     @Override
