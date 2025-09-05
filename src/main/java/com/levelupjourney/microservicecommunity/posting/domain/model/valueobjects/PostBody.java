@@ -1,5 +1,7 @@
 package com.levelupjourney.microservicecommunity.posting.domain.model.valueobjects;
 
+import com.levelupjourney.microservicecommunity.shared.domain.validation.ValidationUtils;
+
 import java.util.List;
 
 /**
@@ -11,18 +13,21 @@ public record PostBody(
     List<ImageRef> images
 ) {
     
+    private static final int MAX_TEXT_LENGTH = 500;
+    private static final int MAX_IMAGES = 5;
+    
     public PostBody {
         // Validate business invariants
         if ((text == null || text.trim().isEmpty()) && (images == null || images.isEmpty())) {
             throw new IllegalArgumentException("At least one of text or images must be provided");
         }
         
-        if (text != null && text.length() > 500) {
-            throw new IllegalArgumentException("Text cannot exceed 500 characters");
+        if (text != null) {
+            ValidationUtils.requireMaxLength(text, MAX_TEXT_LENGTH, "Post text");
         }
         
-        if (images != null && images.size() > 5) {
-            throw new IllegalArgumentException("Cannot have more than 5 images");
+        if (images != null && images.size() > MAX_IMAGES) {
+            throw new IllegalArgumentException("Cannot have more than " + MAX_IMAGES + " images");
         }
         
         // Ensure immutability - assign to the parameter, not reassign the field

@@ -40,6 +40,7 @@ public class Post extends AuditableAbstractAggregateRoot<Post> {
     protected Post() {}
     
     private Post(PostId postId, UserId authorId, PostBody content) {
+        this.setId(postId.value());  // Set the inherited MongoDB ID
         this.postId = postId;
         this.authorId = authorId;
         this.content = content;
@@ -93,7 +94,7 @@ public class Post extends AuditableAbstractAggregateRoot<Post> {
             throw new IllegalStateException("Cannot edit a deleted post");
         }
         if (!this.authorId.equals(editorId)) {
-            throw new IllegalStateException("Only the author can edit the post");
+            throw new SecurityException("Only the post owner can edit the post");
         }
         
         this.content = newContent;
@@ -109,6 +110,8 @@ public class Post extends AuditableAbstractAggregateRoot<Post> {
     
     /**
      * Deletes the post (soft delete).
+     * Only the post owner or admin can delete.
+     * Authorization check must be done at service level.
      * 
      * @param deleterId the ID of the user deleting the post
      */
@@ -119,9 +122,7 @@ public class Post extends AuditableAbstractAggregateRoot<Post> {
         if (this.deleted) {
             throw new IllegalStateException("Post is already deleted");
         }
-        if (!this.authorId.equals(deleterId)) {
-            throw new IllegalStateException("Only the author can delete the post");
-        }
+        // Note: Authorization check (post owner or admin) should be done at service level
         
         this.deleted = true;
         var deletedAt = LocalDateTime.now();

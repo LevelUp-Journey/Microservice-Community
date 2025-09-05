@@ -9,6 +9,7 @@ import com.levelupjourney.microservicecommunity.posting.infrastructure.persisten
 import com.levelupjourney.microservicecommunity.shared.application.acl.iam.ProfileCacheService;
 import com.levelupjourney.microservicecommunity.shared.domain.model.valueobjects.PostId;
 import com.levelupjourney.microservicecommunity.shared.domain.model.valueobjects.UserId;
+import com.levelupjourney.microservicecommunity.shared.domain.services.AuthorizationService;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -22,13 +23,16 @@ public class PostCommandServiceImpl implements PostCommandService {
     
     private final PostRepository postRepository;
     private final ProfileCacheService profileCacheService;
+    private final AuthorizationService authorizationService;
     
     public PostCommandServiceImpl(
         PostRepository postRepository,
-        ProfileCacheService profileCacheService
+        ProfileCacheService profileCacheService,
+        AuthorizationService authorizationService
     ) {
         this.postRepository = postRepository;
         this.profileCacheService = profileCacheService;
+        this.authorizationService = authorizationService;
     }
     
     @Override
@@ -76,9 +80,14 @@ public class PostCommandServiceImpl implements PostCommandService {
             throw new IllegalArgumentException("User does not exist: " + command.deleterId());
         }
         
-        // Find and delete the post
+        // Find the post
         var post = postRepository.findByPostId(postId)
             .orElseThrow(() -> new IllegalArgumentException("Post not found: " + command.postId()));
+        
+        // Check authorization (post owner or admin)
+        if (!authorizationService.canDeletePost(post.getAuthorId(), deleterId)) {
+            throw new SecurityException("User is not authorized to delete this post");
+        }
         
         post.delete(deleterId);
         postRepository.save(post);
