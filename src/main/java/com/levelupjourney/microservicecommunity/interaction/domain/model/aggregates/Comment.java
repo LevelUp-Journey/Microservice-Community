@@ -44,6 +44,7 @@ public class Comment extends AuditableAbstractAggregateRoot<Comment> {
     protected Comment() {}
     
     private Comment(CommentId commentId, PostId postId, UserId authorId, CommentContent content) {
+        this.setId(commentId.value());  // Set the inherited MongoDB ID
         this.commentId = commentId;
         this.postId = postId;
         this.authorId = authorId;
@@ -103,7 +104,31 @@ public class Comment extends AuditableAbstractAggregateRoot<Comment> {
             throw new IllegalStateException("Cannot edit a deleted comment");
         }
         if (!this.authorId.equals(editorId)) {
-            throw new IllegalStateException("Only the author can edit the comment");
+            throw new SecurityException("Only the commenter can edit their own comment");
+        }
+        
+        this.content = newContent;
+        this.editedAt = LocalDateTime.now();
+        
+        // Register domain event
+        this.addDomainEvent(new CommentEdited(
+            this.commentId.value(),
+            newContent,
+            this.editedAt
+        ));
+    }
+    
+    /**
+     * Edits the comment content (simplified version for use after authorization check).
+     * 
+     * @param newContent the new comment content
+     */
+    public void edit(CommentContent newContent) {
+        if (newContent == null) {
+            throw new IllegalArgumentException("New content cannot be null");
+        }
+        if (this.deleted) {
+            throw new IllegalStateException("Cannot edit a deleted comment");
         }
         
         this.content = newContent;
@@ -119,6 +144,7 @@ public class Comment extends AuditableAbstractAggregateRoot<Comment> {
     
     /**
      * Deletes the comment (soft delete).
+     * Authorization check must be done at service level.
      * 
      * @param deleterId the ID of the user deleting the comment
      */
@@ -129,9 +155,7 @@ public class Comment extends AuditableAbstractAggregateRoot<Comment> {
         if (this.deleted) {
             throw new IllegalStateException("Comment is already deleted");
         }
-        if (!this.authorId.equals(deleterId)) {
-            throw new IllegalStateException("Only the author can delete the comment");
-        }
+        // Note: Authorization check (comment author, post owner, or admin) should be done at service level
         
         this.deleted = true;
         var deletedAt = LocalDateTime.now();
@@ -155,5 +179,22 @@ public class Comment extends AuditableAbstractAggregateRoot<Comment> {
      */
     public boolean isActive() {
         return !deleted;
+    }
+    
+    /**
+     * Marks this comment as deleted.
+     */
+    public void markAsDeleted() {
+        if (this.deleted) {
+            throw new IllegalStateException("Comment is already deleted");
+        }
+        
+        this.deleted = true;
+        var deletedAt = LocalDateTime.now();
+        
+        this.addDomainEvent(new CommentDeleted(
+            this.commentId.value(),
+            deletedAt
+        ));
     }
 }

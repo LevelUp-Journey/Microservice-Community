@@ -24,6 +24,12 @@ public interface LikeRepository extends MongoRepository<Like, String> {
     Optional<Like> findByPostIdAndUserId(PostId postId, UserId userId);
     
     /**
+     * Finds a like by post ID and user ID using string values.
+     */
+    @Query("{ 'post_id.value': ?0, 'user_id.value': ?1 }")
+    Optional<Like> findByPostIdAndUserId(String postId, String userId);
+    
+    /**
      * Finds all likes for a specific post with pagination.
      */
     Page<Like> findByPostIdOrderByLikedAtDesc(PostId postId, Pageable pageable);

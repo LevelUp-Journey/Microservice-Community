@@ -1,19 +1,18 @@
 package com.levelupjourney.microservicecommunity.interaction.domain.model.valueobjects;
 
+import com.levelupjourney.microservicecommunity.shared.domain.validation.ValidationUtils;
+
 /**
  * Value object representing the content of a comment.
  * Encapsulates comment text with business validation.
  */
 public record CommentContent(String text) {
     
+    private static final int MIN_LENGTH = 1;
+    private static final int MAX_LENGTH = 300;
+    
     public CommentContent {
-        if (text == null || text.trim().isEmpty()) {
-            throw new IllegalArgumentException("Comment text cannot be null or empty");
-        }
-        
-        if (text.length() > 300) {
-            throw new IllegalArgumentException("Comment text cannot exceed 300 characters");
-        }
+        ValidationUtils.requireLengthRange(text, MIN_LENGTH, MAX_LENGTH, "Comment text");
         
         // Trim whitespace
         text = text.trim();

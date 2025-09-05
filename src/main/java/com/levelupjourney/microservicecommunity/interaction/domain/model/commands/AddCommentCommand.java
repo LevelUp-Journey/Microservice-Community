@@ -1,14 +1,12 @@
 package com.levelupjourney.microservicecommunity.interaction.domain.model.commands;
 
-import com.levelupjourney.microservicecommunity.interaction.domain.model.valueobjects.CommentContent;
-
 /**
  * Command to add a comment to a post.
  */
 public record AddCommentCommand(
     String postId,
     String authorId,
-    CommentContent content
+    String content
 ) {
     
     public AddCommentCommand {
@@ -18,8 +16,8 @@ public record AddCommentCommand(
         if (authorId == null || authorId.trim().isEmpty()) {
             throw new IllegalArgumentException("Author ID cannot be null or empty");
         }
-        if (content == null) {
-            throw new IllegalArgumentException("Content cannot be null");
+        if (content == null || content.trim().isEmpty()) {
+            throw new IllegalArgumentException("Content cannot be null or empty");
         }
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -28,6 +29,12 @@ public interface CommentRepository extends MongoRepository<Comment, String> {
      * Finds comments by post ID with pagination (excluding deleted).
      */
     Page<Comment> findByPostIdAndDeletedFalseOrderByCreatedAtAsc(PostId postId, Pageable pageable);
+    
+    /**
+     * Finds comments by post ID (excluding deleted) - used for listing all comments.
+     */
+    @Query(value = "{ 'post_id.value': ?0, 'deleted': false }", sort = "{ 'createdAt': 1 }")
+    List<Comment> findByPostIdAndDeletedFalseOrderByCreatedAtAsc(String postId);
     
     /**
      * Finds comments by author ID with pagination (excluding deleted).
