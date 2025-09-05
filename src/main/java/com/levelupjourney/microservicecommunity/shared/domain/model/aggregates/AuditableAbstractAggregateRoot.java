@@ -39,4 +39,13 @@ public abstract class AuditableAbstractAggregateRoot<T extends AbstractAggregate
     public void addDomainEvent(Object event) {
         registerEvent(event);
     }
+    
+    /**
+     * Sets the MongoDB document ID. Used by subclasses to control the ID.
+     *
+     * @param id the ID to set
+     */
+    protected void setId(String id) {
+        this.id = id;
+    }
 }
