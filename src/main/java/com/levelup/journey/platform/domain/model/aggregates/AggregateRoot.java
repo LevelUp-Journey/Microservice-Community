@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Base para agregados que acumulan eventos de dominio.
+ * Base for aggregates that accumulate domain events.
  */
 public abstract class AggregateRoot {
     private final List<DomainEvent> domainEvents = new ArrayList<>();

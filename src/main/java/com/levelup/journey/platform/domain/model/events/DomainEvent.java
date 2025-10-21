@@ -3,7 +3,7 @@ package com.levelup.journey.platform.domain.model.events;
 import java.time.Instant;
 
 /**
- * Evento de dominio base, usado para comunicación interna entre capas y publicación externa.
+ * Base domain event, used for internal communication between layers and external publication.
  */
 public interface DomainEvent {
     String aggregateId();

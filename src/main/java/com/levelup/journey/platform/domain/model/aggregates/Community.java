@@ -8,7 +8,7 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * Agregado Comunidad: raíz encargada de encapsular reglas básicas de una comunidad.
+ * Community Aggregate: root responsible for encapsulating basic rules of a community.
  */
 public final class Community extends AggregateRoot {
     private final CommunityId id;
@@ -18,8 +18,8 @@ public final class Community extends AggregateRoot {
     private final Instant createdAt;
 
     private Community(CommunityId id, UserId ownerId, String name, String description, Instant createdAt) {
-        this.id = Objects.requireNonNull(id, "id requerido");
-        this.ownerId = Objects.requireNonNull(ownerId, "ownerId requerido");
+        this.id = Objects.requireNonNull(id, "id required");
+        this.ownerId = Objects.requireNonNull(ownerId, "ownerId required");
         this.name = requireText(name, "name");
         this.description = description;
         this.createdAt = Objects.requireNonNullElseGet(createdAt, Instant::now);
@@ -31,18 +31,18 @@ public final class Community extends AggregateRoot {
         return c;
     }
 
-    /** Restaurar agregado desde persistencia (sin eventos). */
+    /** Restore aggregate from persistence (without events). */
     public static Community restore(CommunityId id, UserId ownerId, String name, String description, Instant createdAt) {
         return new Community(id, ownerId, name, description, createdAt);
     }
 
     public void rename(String newName) {
         this.name = requireText(newName, "newName");
-        // En un futuro se podría emitir un evento CommunityRenamed
+        // In the future, a CommunityRenamed event could be emitted
     }
 
     private static String requireText(String value, String field) {
-        if (value == null || value.isBlank()) throw new IllegalArgumentException(field + " requerido");
+        if (value == null || value.isBlank()) throw new IllegalArgumentException(field + " required");
         return value;
     }
 

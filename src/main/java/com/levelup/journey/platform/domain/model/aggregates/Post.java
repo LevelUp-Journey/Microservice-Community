@@ -14,7 +14,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-/** Agregado Post */
+/** Post Aggregate */
 public final class Post extends AggregateRoot {
     private final PostId id;
     private final CommunityId communityId;
@@ -25,9 +25,9 @@ public final class Post extends AggregateRoot {
     private final List<Comment> comments = new ArrayList<>();
 
     private Post(PostId id, CommunityId communityId, UserId authorId, String title, String content, Instant createdAt) {
-        this.id = Objects.requireNonNull(id, "id requerido");
-        this.communityId = Objects.requireNonNull(communityId, "communityId requerido");
-        this.authorId = Objects.requireNonNull(authorId, "authorId requerido");
+        this.id = Objects.requireNonNull(id, "id required");
+        this.communityId = Objects.requireNonNull(communityId, "communityId required");
+        this.authorId = Objects.requireNonNull(authorId, "authorId required");
         this.title = requireText(title, "title");
         this.content = requireText(content, "content");
         this.createdAt = Objects.requireNonNullElseGet(createdAt, Instant::now);
@@ -39,7 +39,7 @@ public final class Post extends AggregateRoot {
         return p;
     }
 
-    /** Restaurar agregado desde persistencia (sin eventos). */
+    /** Restore aggregate from persistence (without events). */
     public static Post restore(PostId id, CommunityId communityId, UserId authorId, String title, String content, Instant createdAt, List<Comment> existingComments) {
         Post p = new Post(id, communityId, authorId, title, content, createdAt);
         if (existingComments != null && !existingComments.isEmpty()) {
@@ -56,7 +56,7 @@ public final class Post extends AggregateRoot {
     }
 
     private static String requireText(String value, String field) {
-        if (value == null || value.isBlank()) throw new IllegalArgumentException(field + " requerido");
+        if (value == null || value.isBlank()) throw new IllegalArgumentException(field + " required");
         return value;
     }
 
