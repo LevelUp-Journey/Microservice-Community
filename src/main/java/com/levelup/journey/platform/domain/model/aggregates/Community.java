@@ -31,6 +31,11 @@ public final class Community extends AggregateRoot {
         return c;
     }
 
+    /** Restaurar agregado desde persistencia (sin eventos). */
+    public static Community restore(CommunityId id, UserId ownerId, String name, String description, Instant createdAt) {
+        return new Community(id, ownerId, name, description, createdAt);
+    }
+
     public void rename(String newName) {
         this.name = requireText(newName, "newName");
         // En un futuro se podría emitir un evento CommunityRenamed
@@ -47,4 +52,3 @@ public final class Community extends AggregateRoot {
     public String description() { return description; }
     public Instant createdAt() { return createdAt; }
 }
-

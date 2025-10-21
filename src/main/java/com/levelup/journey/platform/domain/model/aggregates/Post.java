@@ -39,6 +39,15 @@ public final class Post extends AggregateRoot {
         return p;
     }
 
+    /** Restaurar agregado desde persistencia (sin eventos). */
+    public static Post restore(PostId id, CommunityId communityId, UserId authorId, String title, String content, Instant createdAt, List<Comment> existingComments) {
+        Post p = new Post(id, communityId, authorId, title, content, createdAt);
+        if (existingComments != null && !existingComments.isEmpty()) {
+            p.comments.addAll(existingComments);
+        }
+        return p;
+    }
+
     public Comment addComment(CommentId commentId, UserId authorId, String content) {
         Comment c = new Comment(commentId, authorId, requireText(content, "content"), Instant.now());
         this.comments.add(c);
@@ -59,4 +68,3 @@ public final class Post extends AggregateRoot {
     public Instant createdAt() { return createdAt; }
     public List<Comment> comments() { return Collections.unmodifiableList(comments); }
 }
-
