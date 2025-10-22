@@ -29,32 +29,12 @@
     <properties>
         <java.version>21</java.version>
         <springdoc.version>2.1.0</springdoc.version>
-        <datastax.driver.version>4.17.0</datastax.driver.version>
     </properties>
     <dependencies>
-        <!-- Spring Data Cassandra con DataStax -->
+        <!-- Spring Data Cassandra -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-cassandra</artifactId>
-        </dependency>
-        
-        <!-- DataStax Java Driver para Cassandra -->
-        <dependency>
-            <groupId>com.datastax.oss</groupId>
-            <artifactId>java-driver-core</artifactId>
-            <version>${datastax.driver.version}</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>com.datastax.oss</groupId>
-            <artifactId>java-driver-query-builder</artifactId>
-            <version>${datastax.driver.version}</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>com.datastax.oss</groupId>
-            <artifactId>java-driver-mapper-runtime</artifactId>
-            <version>${datastax.driver.version}</version>
         </dependency>
 
         <!-- Pluralize library for table naming strategy -->
@@ -64,6 +44,13 @@
             <version>1.0.0</version>
         </dependency>
 
+        <!-- Dotenv for environment variables -->
+        <dependency>
+            <groupId>me.paulschwarz</groupId>
+            <artifactId>spring-dotenv</artifactId>
+            <version>4.0.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
@@ -71,12 +58,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-        </dependency>
-
-        <!-- Añadido: Actuator -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
         <!-- Añadido: Kafka -->
