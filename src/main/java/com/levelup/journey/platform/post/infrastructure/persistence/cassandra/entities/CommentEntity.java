@@ -34,5 +34,6 @@ public class CommentEntity {
     private String authorId;
 
     private String content;
+    private String imageUrl;
     private Instant createdAt;
 }

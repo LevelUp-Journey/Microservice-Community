@@ -11,6 +11,7 @@ import com.levelup.journey.platform.post.domain.services.CommentCommandService;
 import com.levelup.journey.platform.post.domain.services.CommentQueryService;
 import com.levelup.journey.platform.post.domain.services.CommunityQueryService;
 import com.levelup.journey.platform.post.domain.services.PostCommandService;
+import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -68,12 +69,14 @@ public class PostCommandServiceImpl implements PostCommandService {
             }
 
             // Create new post from command
+            var imageUrl = command.imageUrl() != null ? ImageUrl.of(command.imageUrl()) : ImageUrl.empty();
             Post post = Post.publish(
                     postId,
                     command.communityId(),
                     command.authorId(),
                     command.title(),
-                    command.content()
+                    command.content(),
+                    imageUrl
             );
 
             // Save post
@@ -123,6 +126,7 @@ public class PostCommandServiceImpl implements PostCommandService {
                     post.authorId(),
                     post.title(),
                     post.content(),
+                    post.imageUrl(),
                     post.createdAt(),
                     comments
                 );

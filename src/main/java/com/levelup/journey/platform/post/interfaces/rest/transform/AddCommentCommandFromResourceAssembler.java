@@ -11,10 +11,12 @@ import com.levelup.journey.platform.post.interfaces.rest.resources.AddCommentRes
 public class AddCommentCommandFromResourceAssembler {
 
     public static AddCommentCommand toCommandFromResource(String postId, AddCommentResource resource) {
+        String imageUrl = resource.imageUrl() != null ? resource.imageUrl().toString() : null;
         return new AddCommentCommand(
                 PostId.of(postId),
                 UserId.of(resource.authorId()),
-                resource.content()
+                resource.content(),
+                imageUrl
         );
     }
 }

@@ -10,10 +10,12 @@ import com.levelup.journey.platform.post.interfaces.rest.resources.CreateCommuni
 public class CreateCommunityCommandFromResourceAssembler {
 
     public static CreateCommunityCommand toCommandFromResource(CreateCommunityResource resource) {
+        String imageUrl = resource.imageUrl() != null ? resource.imageUrl().toString() : null;
         return new CreateCommunityCommand(
                 UserId.of(resource.ownerId()),
                 resource.name(),
-                resource.description()
+                resource.description(),
+                imageUrl
         );
     }
 }

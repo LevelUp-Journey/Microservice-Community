@@ -28,5 +28,6 @@ public class CommunityEntity {
 
     private String name;
     private String description;
+    private String imageUrl;
     private Instant createdAt;
 }

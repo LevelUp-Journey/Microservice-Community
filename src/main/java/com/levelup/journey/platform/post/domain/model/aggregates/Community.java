@@ -3,6 +3,7 @@ package com.levelup.journey.platform.post.domain.model.aggregates;
 import com.levelup.journey.platform.post.domain.model.events.CommunityCreated;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
+import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -15,25 +16,27 @@ public final class Community extends AggregateRoot {
     private final UserId ownerId;
     private String name;
     private String description;
+    private ImageUrl imageUrl;
     private final Instant createdAt;
 
-    private Community(CommunityId id, UserId ownerId, String name, String description, Instant createdAt) {
+    private Community(CommunityId id, UserId ownerId, String name, String description, ImageUrl imageUrl, Instant createdAt) {
         this.id = Objects.requireNonNull(id, "id required");
         this.ownerId = Objects.requireNonNull(ownerId, "ownerId required");
         this.name = requireText(name, "name");
         this.description = description;
+        this.imageUrl = imageUrl != null ? imageUrl : ImageUrl.empty();
         this.createdAt = Objects.requireNonNullElseGet(createdAt, Instant::now);
     }
 
-    public static Community create(CommunityId id, UserId ownerId, String name, String description) {
-        Community c = new Community(id, ownerId, name, description, Instant.now());
+    public static Community create(CommunityId id, UserId ownerId, String name, String description, ImageUrl imageUrl) {
+        Community c = new Community(id, ownerId, name, description, imageUrl, Instant.now());
         c.recordEvent(new CommunityCreated(id.value(), name, ownerId.value(), Instant.now()));
         return c;
     }
 
     /** Restore aggregate from persistence (without events). */
-    public static Community restore(CommunityId id, UserId ownerId, String name, String description, Instant createdAt) {
-        return new Community(id, ownerId, name, description, createdAt);
+    public static Community restore(CommunityId id, UserId ownerId, String name, String description, ImageUrl imageUrl, Instant createdAt) {
+        return new Community(id, ownerId, name, description, imageUrl, createdAt);
     }
 
     public void rename(String newName) {
@@ -50,5 +53,6 @@ public final class Community extends AggregateRoot {
     public UserId ownerId() { return ownerId; }
     public String name() { return name; }
     public String description() { return description; }
+    public ImageUrl imageUrl() { return imageUrl; }
     public Instant createdAt() { return createdAt; }
 }

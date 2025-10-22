@@ -13,6 +13,7 @@ public record PostResource(
         String authorId,
         String title,
         String content,
+        String imageUrl,
         Instant createdAt,
         List<CommentResource> comments
 ) {

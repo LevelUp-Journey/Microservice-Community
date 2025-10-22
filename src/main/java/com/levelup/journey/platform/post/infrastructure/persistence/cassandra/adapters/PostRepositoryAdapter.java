@@ -7,6 +7,7 @@ import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.entities.PostEntity;
 import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.repositories.PostCassandraRepository;
+import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -69,6 +70,7 @@ public class PostRepositoryAdapter implements PostRepository {
                 post.authorId().value(),
                 post.title(),
                 post.content(),
+                post.imageUrl() != null && !post.imageUrl().isEmpty() ? post.imageUrl().url() : null,
                 post.createdAt()
         );
     }
@@ -78,12 +80,14 @@ public class PostRepositoryAdapter implements PostRepository {
      * Note: Comments are loaded separately via CommentRepository
      */
     private Post toDomain(PostEntity entity) {
+        ImageUrl imageUrl = entity.getImageUrl() != null ? ImageUrl.of(entity.getImageUrl()) : ImageUrl.empty();
         return Post.restore(
                 PostId.of(entity.getId()),
                 CommunityId.of(entity.getCommunityId()),
                 UserId.of(entity.getAuthorId()),
                 entity.getTitle(),
                 entity.getContent(),
+                imageUrl,
                 entity.getCreatedAt(),
                 List.of() // Comments loaded separately when needed
         );

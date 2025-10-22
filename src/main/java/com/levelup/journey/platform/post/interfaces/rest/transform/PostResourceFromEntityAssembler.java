@@ -17,6 +17,7 @@ public class PostResourceFromEntityAssembler {
                         comment.id().value(),
                         comment.authorId().value(),
                         comment.content(),
+                        comment.imageUrl().isEmpty() ? null : comment.imageUrl().url(),
                         comment.createdAt()
                 ))
                 .collect(Collectors.toList());
@@ -27,6 +28,7 @@ public class PostResourceFromEntityAssembler {
                 entity.authorId().value(),
                 entity.title(),
                 entity.content(),
+                entity.imageUrl().isEmpty() ? null : entity.imageUrl().url(),
                 entity.createdAt(),
                 comments
         );

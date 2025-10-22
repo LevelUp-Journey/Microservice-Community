@@ -3,6 +3,7 @@ package com.levelup.journey.platform.post.interfaces.rest.resources;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.hibernate.validator.constraints.URL;
 
 /**
  * Create Community Resource
@@ -18,8 +19,10 @@ public record CreateCommunityResource(
         @Size(min = 1, max = 100, message = "El nombre debe tener entre 1 y 100 caracteres")
         String name,
 
-        @NotBlank(message = "La descripción es obligatoria")
-        @Size(min = 1, max = 500, message = "La descripción debe tener entre 1 y 500 caracteres")
-        String description
+        @Size(max = 500, message = "La descripción debe tener máximo 500 caracteres")
+        String description,
+
+        @URL(message = "La URL de la imagen debe ser válida")
+        String imageUrl
 ) {
 }

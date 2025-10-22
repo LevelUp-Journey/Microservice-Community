@@ -6,6 +6,7 @@ import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.entities.CommunityEntity;
 import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.repositories.CommunityCassandraRepository;
+import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -54,6 +55,7 @@ public class CommunityRepositoryAdapter implements CommunityRepository {
                 community.ownerId().value(),
                 community.name(),
                 community.description(),
+                community.imageUrl() != null && !community.imageUrl().isEmpty() ? community.imageUrl().url() : null,
                 community.createdAt()
         );
     }
@@ -62,11 +64,13 @@ public class CommunityRepositoryAdapter implements CommunityRepository {
      * Convert Cassandra entity to domain Community
      */
     private Community toDomain(CommunityEntity entity) {
+        ImageUrl imageUrl = entity.getImageUrl() != null ? ImageUrl.of(entity.getImageUrl()) : ImageUrl.empty();
         return Community.restore(
                 CommunityId.of(entity.getId()),
                 UserId.of(entity.getOwnerId()),
                 entity.getName(),
                 entity.getDescription(),
+                imageUrl,
                 entity.getCreatedAt()
         );
     }

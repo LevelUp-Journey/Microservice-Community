@@ -14,6 +14,7 @@ public class CommunityResourceFromEntityAssembler {
                 entity.ownerId().value(),
                 entity.name(),
                 entity.description(),
+                entity.imageUrl().isEmpty() ? null : entity.imageUrl().url(),
                 entity.createdAt()
         );
     }
