@@ -5,6 +5,7 @@ import com.levelup.journey.platform.post.domain.model.repositories.PostRepositor
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
+import com.levelup.journey.platform.post.domain.model.valueobjects.ProfileId;
 import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.entities.PostEntity;
 import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.repositories.PostCassandraRepository;
 import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
@@ -68,6 +69,7 @@ public class PostRepositoryAdapter implements PostRepository {
                 post.id().value(),
                 post.communityId().value(),
                 post.authorId().value(),
+                post.authorProfileId().value(),
                 post.title(),
                 post.content(),
                 post.imageUrl() != null && !post.imageUrl().isEmpty() ? post.imageUrl().url() : null,
@@ -85,6 +87,7 @@ public class PostRepositoryAdapter implements PostRepository {
                 PostId.of(entity.getId()),
                 CommunityId.of(entity.getCommunityId()),
                 UserId.of(entity.getAuthorId()),
+                ProfileId.of(entity.getAuthorProfileId()),
                 entity.getTitle(),
                 entity.getContent(),
                 imageUrl,

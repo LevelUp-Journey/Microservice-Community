@@ -4,6 +4,7 @@ import com.levelup.journey.platform.post.domain.model.aggregates.Community;
 import com.levelup.journey.platform.post.domain.model.repositories.CommunityRepository;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
+import com.levelup.journey.platform.post.domain.model.valueobjects.ProfileId;
 import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.entities.CommunityEntity;
 import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.repositories.CommunityCassandraRepository;
 import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
@@ -53,6 +54,7 @@ public class CommunityRepositoryAdapter implements CommunityRepository {
         return new CommunityEntity(
                 community.id().value(),
                 community.ownerId().value(),
+                community.ownerProfileId().value(),
                 community.name(),
                 community.description(),
                 community.imageUrl() != null && !community.imageUrl().isEmpty() ? community.imageUrl().url() : null,
@@ -68,6 +70,7 @@ public class CommunityRepositoryAdapter implements CommunityRepository {
         return Community.restore(
                 CommunityId.of(entity.getId()),
                 UserId.of(entity.getOwnerId()),
+                ProfileId.of(entity.getOwnerProfileId()),
                 entity.getName(),
                 entity.getDescription(),
                 imageUrl,

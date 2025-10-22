@@ -15,6 +15,11 @@ public record CreateCommunityResource(
                 message = "El ID del propietario debe ser un UUID válido")
         String ownerId,
 
+        @NotBlank(message = "El ID del perfil del propietario es obligatorio")
+        @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                message = "El ID del perfil del propietario debe ser un UUID válido")
+        String ownerProfileId,
+
         @NotBlank(message = "El nombre de la comunidad es obligatorio")
         @Size(min = 1, max = 100, message = "El nombre debe tener entre 1 y 100 caracteres")
         String name,

@@ -16,6 +16,7 @@ public class PostResourceFromEntityAssembler {
                 .map(comment -> new CommentResource(
                         comment.id().value(),
                         comment.authorId().value(),
+                        comment.authorProfileId().value(),
                         comment.content(),
                         comment.imageUrl().isEmpty() ? null : comment.imageUrl().url(),
                         comment.createdAt()
@@ -26,6 +27,7 @@ public class PostResourceFromEntityAssembler {
                 entity.id().value(),
                 entity.communityId().value(),
                 entity.authorId().value(),
+                entity.authorProfileId().value(),
                 entity.title(),
                 entity.content(),
                 entity.imageUrl().isEmpty() ? null : entity.imageUrl().url(),

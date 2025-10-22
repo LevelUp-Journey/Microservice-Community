@@ -2,6 +2,7 @@ package com.levelup.journey.platform.post.interfaces.rest.transform;
 
 import com.levelup.journey.platform.post.domain.model.commands.CreateCommunityCommand;
 import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
+import com.levelup.journey.platform.post.domain.model.valueobjects.ProfileId;
 import com.levelup.journey.platform.post.interfaces.rest.resources.CreateCommunityResource;
 
 /**
@@ -13,6 +14,7 @@ public class CreateCommunityCommandFromResourceAssembler {
         String imageUrl = resource.imageUrl() != null ? resource.imageUrl().toString() : null;
         return new CreateCommunityCommand(
                 UserId.of(resource.ownerId()),
+                ProfileId.of(resource.ownerProfileId()),
                 resource.name(),
                 resource.description(),
                 imageUrl

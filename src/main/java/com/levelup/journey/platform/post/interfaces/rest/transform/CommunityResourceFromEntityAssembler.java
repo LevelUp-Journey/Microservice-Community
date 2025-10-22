@@ -12,6 +12,7 @@ public class CommunityResourceFromEntityAssembler {
         return new CommunityResource(
                 entity.id().value(),
                 entity.ownerId().value(),
+                entity.ownerProfileId().value(),
                 entity.name(),
                 entity.description(),
                 entity.imageUrl().isEmpty() ? null : entity.imageUrl().url(),

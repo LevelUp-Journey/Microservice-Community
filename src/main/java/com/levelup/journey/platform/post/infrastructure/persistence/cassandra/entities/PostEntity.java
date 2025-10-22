@@ -30,6 +30,9 @@ public class PostEntity {
     @CassandraType(type = CassandraType.Name.UUID)
     private String authorId;
 
+    @CassandraType(type = CassandraType.Name.UUID)
+    private String authorProfileId;
+
     private String title;
     private String content;
     private String imageUrl;

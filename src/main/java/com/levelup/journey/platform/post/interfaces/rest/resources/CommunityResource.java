@@ -9,6 +9,7 @@ import java.time.Instant;
 public record CommunityResource(
         String id,
         String ownerId,
+        String ownerProfileId,
         String name,
         String description,
         String imageUrl,

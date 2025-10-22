@@ -9,6 +9,7 @@ import java.time.Instant;
 public record CommentResource(
         String id,
         String authorId,
+        String authorProfileId,
         String content,
         String imageUrl,
         Instant createdAt

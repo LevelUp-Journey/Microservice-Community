@@ -80,6 +80,7 @@ public class PostCommandServiceImpl implements PostCommandService {
                     postId,
                     command.communityId(),
                     command.authorId(),
+                    command.authorProfileId(),
                     command.title(),
                     command.content(),
                     imageUrl
@@ -156,6 +157,7 @@ public class PostCommandServiceImpl implements PostCommandService {
                     post.id(),
                     post.communityId(),
                     post.authorId(),
+                    post.authorProfileId(),
                     post.title(),
                     post.content(),
                     post.imageUrl(),
