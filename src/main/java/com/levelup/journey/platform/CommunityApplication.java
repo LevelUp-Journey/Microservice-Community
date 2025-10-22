@@ -10,7 +10,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @SpringBootApplication
 public class CommunityApplication implements CommandLineRunner, WebMvcConfigurer {
 
-    @Value("${server.port:8080}")
+    @Value("${server.port:8086}")
     private String serverPort;
 
     @Value("${springdoc.swagger-ui.path:/swagger-ui.html}")
