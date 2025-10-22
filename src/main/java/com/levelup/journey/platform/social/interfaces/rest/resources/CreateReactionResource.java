@@ -8,11 +8,6 @@ import jakarta.validation.constraints.Pattern;
  * Request payload for creating a new reaction
  */
 public record CreateReactionResource(
-        @NotBlank(message = "El ID de la reacción es obligatorio")
-        @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                message = "El ID debe ser un UUID válido")
-        String id,
-
         @NotBlank(message = "El ID del post es obligatorio")
         @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
                 message = "El ID del post debe ser un UUID válido")
