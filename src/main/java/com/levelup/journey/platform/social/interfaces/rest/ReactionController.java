@@ -68,15 +68,15 @@ public class ReactionController {
                     content = @Content)
     })
     public ResponseEntity<ReactionResource> createReaction(@Valid @RequestBody CreateReactionResource resource) {
-        logger.info("Creating reaction with ID: {}, postId: {}, userId: {}, type: {}",
-                resource.id(), resource.postId(), resource.userId(), resource.reactionType());
+        logger.info("Creating reaction with postId: {}, userId: {}, type: {}",
+                resource.postId(), resource.userId(), resource.reactionType());
 
         try {
             var command = CreateReactionCommandFromResourceAssembler.toCommandFromResource(resource);
             var reaction = reactionCommandService.handle(command);
 
             if (reaction.isEmpty()) {
-                logger.warn("Failed to create reaction with ID: {} - service returned empty result", resource.id());
+                logger.warn("Failed to create reaction for post {} by user {} - service returned empty result", resource.postId(), resource.userId());
                 return ResponseEntity.badRequest().build();
             }
 
