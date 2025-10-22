@@ -1,0 +1,51 @@
+# Palabras prohibidas para moderación automática
+# Una palabra por línea - líneas que empiezan con # son comentarios
+
+# Insultos generales
+idiota
+estúpido
+imbécil
+tonto
+basura
+perdedor
+bobo
+tarado
+payaso
+puta
+gey
+perra
+
+
+# Discurso de odio
+racista
+homófobo
+xenófobo
+nazi
+fascista
+Mateo
+mateo
+
+# Lenguaje agresivo
+odio
+maldito
+demonio
+mierda
+joder
+cabrón
+pendejo
+estúpido
+
+# Términos discriminatorios
+maricón
+negro
+sudaca
+indio
+gitano
+
+# Violencia
+matar
+morir
+suicidio
+golpear
+violencia
+guerra

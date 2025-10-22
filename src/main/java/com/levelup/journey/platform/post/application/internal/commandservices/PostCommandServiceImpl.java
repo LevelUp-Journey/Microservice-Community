@@ -1,5 +1,7 @@
 package com.levelup.journey.platform.post.application.internal.commandservices;
 
+import com.levelup.journey.platform.moderation.domain.model.commands.AnalyzeContentCommand;
+import com.levelup.journey.platform.moderation.domain.services.ReportCommandService;
 import com.levelup.journey.platform.post.domain.model.aggregates.Post;
 import com.levelup.journey.platform.post.domain.model.commands.AddCommentCommand;
 import com.levelup.journey.platform.post.domain.model.commands.PublishPostCommand;
@@ -13,6 +15,7 @@ import com.levelup.journey.platform.post.domain.services.CommunityQueryService;
 import com.levelup.journey.platform.post.domain.services.PostCommandService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -32,6 +35,9 @@ public class PostCommandServiceImpl implements PostCommandService {
     private final CommunityQueryService communityQueryService;
     private final CommentCommandService commentCommandService;
     private final CommentQueryService commentQueryService;
+    
+    @Autowired(required = false)
+    private ReportCommandService reportCommandService;
 
     public PostCommandServiceImpl(PostRepository postRepository,
                                   CommunityQueryService communityQueryService,
@@ -79,6 +85,32 @@ public class PostCommandServiceImpl implements PostCommandService {
             // Save post
             Post savedPost = postRepository.save(post);
             logger.info("Post published and saved successfully with ID: {}", savedPost.id());
+
+            // Analyze content for moderation (if moderation service is available)
+            if (reportCommandService != null) {
+                try {
+                    String fullContent = command.title() + " " + command.content();
+                    AnalyzeContentCommand analyzeCommand = new AnalyzeContentCommand(
+                        com.levelup.journey.platform.moderation.domain.model.valueobjects.PostId.of(
+                            UUID.fromString(savedPost.id().value())
+                        ),
+                        com.levelup.journey.platform.moderation.domain.model.valueobjects.UserId.of(
+                            UUID.fromString(command.authorId().value())
+                        ),
+                        fullContent
+                    );
+                    
+                    var reportId = reportCommandService.handle(analyzeCommand);
+                    if (reportId != null) {
+                        logger.warn("Suspicious content detected in post {}. Report created with ID: {}", 
+                                  savedPost.id(), reportId.value());
+                    }
+                } catch (Exception e) {
+                    logger.error("Error analyzing content for moderation in post {}: {}", 
+                               savedPost.id(), e.getMessage());
+                    // Don't fail the post creation if moderation analysis fails
+                }
+            }
 
             return Optional.of(savedPost);
 
