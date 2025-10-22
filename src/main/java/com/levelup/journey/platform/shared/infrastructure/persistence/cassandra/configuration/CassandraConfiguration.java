@@ -19,7 +19,10 @@ import java.net.InetSocketAddress;
  * Configures connection to local Cassandra instance at 127.0.0.1:9042
  */
 @Configuration
-@EnableCassandraRepositories(basePackages = "com.levelup.journey.platform.post.infrastructure.persistence.cassandra.repositories")
+@EnableCassandraRepositories(basePackages = {
+        "com.levelup.journey.platform.post.infrastructure.persistence.cassandra.repositories",
+        "com.levelup.journey.platform.social.infrastructure.persistence.cassandra.repositories"
+})
 public class CassandraConfiguration extends AbstractCassandraConfiguration {
 
     @Value("${spring.cassandra.contact-points}")
@@ -62,7 +65,8 @@ public class CassandraConfiguration extends AbstractCassandraConfiguration {
     @Override
     public String[] getEntityBasePackages() {
         return new String[]{
-            "com.levelup.journey.platform.post.infrastructure.persistence.cassandra.entities"
+            "com.levelup.journey.platform.post.infrastructure.persistence.cassandra.entities",
+            "com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities"
         };
     }
 
