@@ -15,6 +15,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +34,8 @@ import java.util.stream.Collectors;
 @RequestMapping(value = "/api/v1/communities", produces = MediaType.APPLICATION_JSON_VALUE)
 @Tag(name = "Communities", description = "Operations related to community management")
 public class CommunityController {
+
+    private static final Logger logger = LoggerFactory.getLogger(CommunityController.class);
 
     private final CommunityCommandService communityCommandService;
     private final CommunityQueryService communityQueryService;
@@ -50,21 +55,37 @@ public class CommunityController {
             @ApiResponse(responseCode = "201", description = "Community created successfully",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = CommunityResource.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input data",
+            @ApiResponse(responseCode = "400", description = "Invalid input data or community already exists",
+                    content = @Content),
+            @ApiResponse(responseCode = "409", description = "Community with this ID already exists",
                     content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error",
                     content = @Content)
     })
-    public ResponseEntity<CommunityResource> createCommunity(@RequestBody CreateCommunityResource resource) {
-        var command = CreateCommunityCommandFromResourceAssembler.toCommandFromResource(resource);
-        var community = communityCommandService.handle(command);
+    public ResponseEntity<CommunityResource> createCommunity(@Valid @RequestBody CreateCommunityResource resource) {
+        logger.info("Creating community with name: {}, ownerId: {}",
+                   resource.name(), resource.ownerId());
 
-        if (community.isEmpty()) {
+        try {
+            var command = CreateCommunityCommandFromResourceAssembler.toCommandFromResource(resource);
+            var community = communityCommandService.handle(command);
+
+            if (community.isEmpty()) {
+                logger.warn("Failed to create community with name: {} - service returned empty result", resource.name());
+                return ResponseEntity.badRequest().build();
+            }
+
+            var communityResource = CommunityResourceFromEntityAssembler.toResourceFromEntity(community.get());
+            logger.info("Community created successfully with ID: {}", communityResource.id());
+            return new ResponseEntity<>(communityResource, HttpStatus.CREATED);
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Validation error creating community with name: {} - {}", resource.name(), e.getMessage());
             return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error("Unexpected error creating community with name: {}", resource.name(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-
-        var communityResource = CommunityResourceFromEntityAssembler.toResourceFromEntity(community.get());
-        return new ResponseEntity<>(communityResource, HttpStatus.CREATED);
     }
 
     /**
@@ -76,19 +97,34 @@ public class CommunityController {
             @ApiResponse(responseCode = "200", description = "Community found",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = CommunityResource.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid community ID format",
+                    content = @Content),
             @ApiResponse(responseCode = "404", description = "Community not found",
                     content = @Content)
     })
     public ResponseEntity<CommunityResource> getCommunityById(@PathVariable String communityId) {
-        var query = new GetCommunityByIdQuery(CommunityId.of(communityId));
-        var community = communityQueryService.handle(query);
+        logger.info("Retrieving community with ID: {}", communityId);
 
-        if (community.isEmpty()) {
-            return ResponseEntity.notFound().build();
+        try {
+            var query = new GetCommunityByIdQuery(CommunityId.of(communityId));
+            var community = communityQueryService.handle(query);
+
+            if (community.isEmpty()) {
+                logger.warn("Community not found with ID: {}", communityId);
+                return ResponseEntity.notFound().build();
+            }
+
+            var communityResource = CommunityResourceFromEntityAssembler.toResourceFromEntity(community.get());
+            logger.debug("Community retrieved successfully with ID: {}", communityId);
+            return ResponseEntity.ok(communityResource);
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid community ID format: {} - {}", communityId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error("Unexpected error retrieving community with ID: {}", communityId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-
-        var communityResource = CommunityResourceFromEntityAssembler.toResourceFromEntity(community.get());
-        return ResponseEntity.ok(communityResource);
     }
 
     /**
@@ -102,13 +138,22 @@ public class CommunityController {
                             schema = @Schema(implementation = CommunityResource.class)))
     })
     public ResponseEntity<List<CommunityResource>> getAllCommunities() {
-        var query = new GetAllCommunitiesQuery();
-        var communities = communityQueryService.handle(query);
+        logger.info("Retrieving all communities");
 
-        var communityResources = communities.stream()
-                .map(CommunityResourceFromEntityAssembler::toResourceFromEntity)
-                .collect(Collectors.toList());
+        try {
+            var query = new GetAllCommunitiesQuery();
+            var communities = communityQueryService.handle(query);
 
-        return ResponseEntity.ok(communityResources);
+            var communityResources = communities.stream()
+                    .map(CommunityResourceFromEntityAssembler::toResourceFromEntity)
+                    .collect(Collectors.toList());
+
+            logger.info("Retrieved {} communities successfully", communityResources.size());
+            return ResponseEntity.ok(communityResources);
+
+        } catch (Exception e) {
+            logger.error("Unexpected error retrieving all communities", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }
