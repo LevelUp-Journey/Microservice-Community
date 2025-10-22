@@ -21,7 +21,8 @@ import java.net.InetSocketAddress;
 @Configuration
 @EnableCassandraRepositories(basePackages = {
         "com.levelup.journey.platform.post.infrastructure.persistence.cassandra.repositories",
-        "com.levelup.journey.platform.social.infrastructure.persistence.cassandra.repositories"
+        "com.levelup.journey.platform.social.infrastructure.persistence.cassandra.repositories",
+        "com.levelup.journey.platform.moderation.infrastructure.persistence.cassandra.repositories"
 })
 public class CassandraConfiguration extends AbstractCassandraConfiguration {
 
@@ -66,7 +67,8 @@ public class CassandraConfiguration extends AbstractCassandraConfiguration {
     public String[] getEntityBasePackages() {
         return new String[]{
             "com.levelup.journey.platform.post.infrastructure.persistence.cassandra.entities",
-            "com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities"
+            "com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities",
+            "com.levelup.journey.platform.moderation.infrastructure.persistence.cassandra.entities"
         };
     }
 

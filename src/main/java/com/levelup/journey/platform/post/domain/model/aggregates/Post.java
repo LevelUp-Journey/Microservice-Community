@@ -37,7 +37,7 @@ public final class Post extends AggregateRoot {
 
     public static Post publish(PostId id, CommunityId communityId, UserId authorId, String title, String content) {
         Post p = new Post(id, communityId, authorId, title, content, Instant.now());
-        p.recordEvent(new PostPublished(id.value(), communityId.value(), authorId.value(), title, Instant.now()));
+        p.recordEvent(new PostPublished(id.value(), communityId.value(), authorId.value(), title, content, Instant.now()));
         return p;
     }
 
