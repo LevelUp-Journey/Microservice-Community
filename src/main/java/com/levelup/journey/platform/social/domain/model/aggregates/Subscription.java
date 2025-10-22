@@ -7,6 +7,7 @@ import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Subscription aggregate root
@@ -28,7 +29,8 @@ public final class Subscription extends AggregateRoot {
     /**
      * Factory method to create a new subscription (emits event)
      */
-    public static Subscription create(SubscriptionId id, UserId userId, CommunityId communityId) {
+    public static Subscription create(UserId userId, CommunityId communityId) {
+        SubscriptionId id = SubscriptionId.of(UUID.randomUUID().toString());
         Subscription subscription = new Subscription(id, userId, communityId, Instant.now());
         subscription.recordEvent(new SubscriptionCreated(
                 id.value(),

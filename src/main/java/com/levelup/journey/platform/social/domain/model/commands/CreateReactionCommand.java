@@ -1,7 +1,6 @@
 package com.levelup.journey.platform.social.domain.model.commands;
 
 import com.levelup.journey.platform.social.domain.model.valueobjects.PostId;
-import com.levelup.journey.platform.social.domain.model.valueobjects.ReactionId;
 import com.levelup.journey.platform.social.domain.model.valueobjects.ReactionType;
 import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
 
@@ -9,15 +8,11 @@ import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
  * Command to create a new reaction to a post
  */
 public record CreateReactionCommand(
-        ReactionId id,
         PostId postId,
         UserId userId,
         ReactionType reactionType
 ) {
     public CreateReactionCommand {
-        if (id == null) {
-            throw new IllegalArgumentException("Reaction id is required");
-        }
         if (postId == null) {
             throw new IllegalArgumentException("Post id is required");
         }

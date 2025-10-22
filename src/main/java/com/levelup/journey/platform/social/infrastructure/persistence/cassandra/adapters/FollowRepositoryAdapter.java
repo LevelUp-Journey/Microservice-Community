@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -34,33 +35,37 @@ public class FollowRepositoryAdapter implements FollowRepository {
 
     @Override
     public Optional<Follow> findById(FollowId id) {
-        return cassandraRepository.findById(id.value())
+        return cassandraRepository.findById(UUID.fromString(id.value()))
                 .map(this::toDomain);
     }
 
     @Override
     public List<Follow> findByFollowerId(UserId followerId) {
-        return cassandraRepository.findByFollowerId(followerId.value()).stream()
+        return cassandraRepository.findByFollowerId(UUID.fromString(followerId.value())).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<Follow> findByFollowingId(UserId followingId) {
-        return cassandraRepository.findByFollowingId(followingId.value()).stream()
+        return cassandraRepository.findByFollowingId(UUID.fromString(followingId.value())).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     public Optional<Follow> findByFollowerIdAndFollowingId(UserId followerId, UserId followingId) {
-        return cassandraRepository.findByFollowerIdAndFollowingId(followerId.value(), followingId.value())
+        return cassandraRepository.findByFollowerIdAndFollowingId(UUID.fromString(followerId.value()), UUID.fromString(followingId.value()))
                 .map(this::toDomain);
     }
 
     @Override
     public void deleteById(FollowId id) {
-        cassandraRepository.deleteById(id.value());
+        // Since we changed the primary key, we need to find and delete by the generated UUID id field
+        cassandraRepository.findAll().stream()
+                .filter(entity -> entity.getId().equals(UUID.fromString(id.value())))
+                .findFirst()
+                .ifPresent(cassandraRepository::delete);
     }
 
     /**
@@ -68,9 +73,9 @@ public class FollowRepositoryAdapter implements FollowRepository {
      */
     private FollowEntity toEntity(Follow follow) {
         return new FollowEntity(
-                follow.id().value(),
-                follow.followerId().value(),
-                follow.followingId().value(),
+                UUID.fromString(follow.id().value()),
+                UUID.fromString(follow.followerId().value()),
+                UUID.fromString(follow.followingId().value()),
                 follow.createdAt()
         );
     }
@@ -80,9 +85,9 @@ public class FollowRepositoryAdapter implements FollowRepository {
      */
     private Follow toDomain(FollowEntity entity) {
         return Follow.restore(
-                FollowId.of(entity.getId()),
-                UserId.of(entity.getFollowerId()),
-                UserId.of(entity.getFollowingId()),
+                FollowId.of(entity.getId().toString()),
+                UserId.of(entity.getFollowerId().toString()),
+                UserId.of(entity.getFollowingId().toString()),
                 entity.getCreatedAt()
         );
     }

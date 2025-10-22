@@ -8,6 +8,7 @@ import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
 
 import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Follow Entity for Cassandra persistence
@@ -21,13 +22,13 @@ public class FollowEntity {
 
     @PrimaryKey
     @CassandraType(type = CassandraType.Name.UUID)
-    private String id;
+    private UUID id;
 
     @CassandraType(type = CassandraType.Name.UUID)
-    private String followerId;
+    private UUID followerId;
 
     @CassandraType(type = CassandraType.Name.UUID)
-    private String followingId;
+    private UUID followingId;
 
     private Instant createdAt;
 }

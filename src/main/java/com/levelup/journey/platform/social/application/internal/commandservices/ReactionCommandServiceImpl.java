@@ -28,17 +28,10 @@ public class ReactionCommandServiceImpl implements ReactionCommandService {
 
     @Override
     public Optional<Reaction> handle(CreateReactionCommand command) {
-        logger.info("Processing CreateReactionCommand for reaction ID: {}, postId: {}, userId: {}, type: {}",
-                command.id(), command.postId(), command.userId(), command.reactionType());
+        logger.info("Processing CreateReactionCommand for postId: {}, userId: {}, type: {}",
+                command.postId(), command.userId(), command.reactionType());
 
         try {
-            // Check if reaction with this ID already exists
-            var existingReaction = reactionRepository.findById(command.id());
-            if (existingReaction.isPresent()) {
-                logger.warn("Attempted to create reaction with existing ID: {}", command.id());
-                throw new IllegalArgumentException("Ya existe una reacción con el ID: " + command.id());
-            }
-
             // Check if user has already reacted to this post
             var userReaction = reactionRepository.findByPostIdAndUserId(command.postId(), command.userId());
             if (userReaction.isPresent()) {
@@ -48,7 +41,6 @@ public class ReactionCommandServiceImpl implements ReactionCommandService {
 
             // Create new reaction
             Reaction reaction = Reaction.create(
-                    command.id(),
                     command.postId(),
                     command.userId(),
                     command.reactionType()
@@ -61,10 +53,12 @@ public class ReactionCommandServiceImpl implements ReactionCommandService {
             return Optional.of(savedReaction);
 
         } catch (IllegalArgumentException e) {
-            logger.error("Validation error in CreateReactionCommand for ID: {} - {}", command.id(), e.getMessage());
+            logger.error("Validation error in CreateReactionCommand for postId: {} and userId: {} - {}", 
+                    command.postId(), command.userId(), e.getMessage());
             throw e;
         } catch (Exception e) {
-            logger.error("Unexpected error processing CreateReactionCommand for ID: {}", command.id(), e);
+            logger.error("Unexpected error processing CreateReactionCommand for postId: {} and userId: {}", 
+                    command.postId(), command.userId(), e);
             return Optional.empty();
         }
     }
