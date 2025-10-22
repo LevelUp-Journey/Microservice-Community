@@ -1,9 +1,7 @@
 package com.levelup.journey.platform.post.domain.model.aggregates;
 
 import com.levelup.journey.platform.post.domain.model.entities.Comment;
-import com.levelup.journey.platform.post.domain.model.events.CommentAdded;
 import com.levelup.journey.platform.post.domain.model.events.PostPublished;
-import com.levelup.journey.platform.post.domain.model.valueobjects.CommentId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
@@ -14,7 +12,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-/** Post Aggregate */
+/**
+ * Post Aggregate
+ * Note: Comments are stored in a separate table and loaded on-demand.
+ * The comments list is transient and only populated when explicitly loaded.
+ */
 public final class Post extends AggregateRoot {
     private final PostId id;
     private final CommunityId communityId;
@@ -39,20 +41,23 @@ public final class Post extends AggregateRoot {
         return p;
     }
 
-    /** Restore aggregate from persistence (without events). */
+    /**
+     * Restore aggregate from persistence (without events).
+     * @param id post identifier
+     * @param communityId community identifier
+     * @param authorId author identifier
+     * @param title post title
+     * @param content post content
+     * @param createdAt creation timestamp
+     * @param existingComments optional list of comments (can be empty if not loaded)
+     * @return restored Post aggregate
+     */
     public static Post restore(PostId id, CommunityId communityId, UserId authorId, String title, String content, Instant createdAt, List<Comment> existingComments) {
         Post p = new Post(id, communityId, authorId, title, content, createdAt);
         if (existingComments != null && !existingComments.isEmpty()) {
             p.comments.addAll(existingComments);
         }
         return p;
-    }
-
-    public Comment addComment(CommentId commentId, UserId authorId, String content) {
-        Comment c = new Comment(commentId, authorId, requireText(content, "content"), Instant.now());
-        this.comments.add(c);
-        this.recordEvent(new CommentAdded(this.id.value(), commentId.value(), authorId.value(), Instant.now()));
-        return c;
     }
 
     private static String requireText(String value, String field) {
@@ -66,5 +71,11 @@ public final class Post extends AggregateRoot {
     public String title() { return title; }
     public String content() { return content; }
     public Instant createdAt() { return createdAt; }
+
+    /**
+     * Returns the comments collection.
+     * Note: This may be empty if comments were not explicitly loaded.
+     * Use CommentQueryService to load comments when needed.
+     */
     public List<Comment> comments() { return Collections.unmodifiableList(comments); }
 }
