@@ -8,12 +8,11 @@ import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Post Entity for Cassandra persistence
  * Maps to the posts table
+ * Comments are stored in a separate comments table
  */
 @Data
 @NoArgsConstructor
@@ -34,5 +33,4 @@ public class PostEntity {
     private String title;
     private String content;
     private Instant createdAt;
-    private List<CommentEntity> comments = new ArrayList<>();
 }

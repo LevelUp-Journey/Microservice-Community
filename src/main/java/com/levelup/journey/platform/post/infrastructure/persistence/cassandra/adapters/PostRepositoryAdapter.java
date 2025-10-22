@@ -1,13 +1,10 @@
 package com.levelup.journey.platform.post.infrastructure.persistence.cassandra.adapters;
 
 import com.levelup.journey.platform.post.domain.model.aggregates.Post;
-import com.levelup.journey.platform.post.domain.model.entities.Comment;
 import com.levelup.journey.platform.post.domain.model.repositories.PostRepository;
-import com.levelup.journey.platform.post.domain.model.valueobjects.CommentId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
-import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.entities.CommentEntity;
 import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.entities.PostEntity;
 import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.repositories.PostCassandraRepository;
 import org.springframework.stereotype.Component;
@@ -19,6 +16,7 @@ import java.util.stream.Collectors;
 /**
  * Post Repository Adapter
  * Adapts domain Post repository to Cassandra persistence
+ * Comments are managed separately through CommentRepository
  */
 @Component
 public class PostRepositoryAdapter implements PostRepository {
@@ -62,32 +60,24 @@ public class PostRepositoryAdapter implements PostRepository {
 
     /**
      * Convert domain Post to Cassandra entity
+     * Note: Comments are not stored here - they are in a separate table
      */
     private PostEntity toEntity(Post post) {
-        PostEntity entity = new PostEntity();
-        entity.setId(post.id().value());
-        entity.setCommunityId(post.communityId().value());
-        entity.setAuthorId(post.authorId().value());
-        entity.setTitle(post.title());
-        entity.setContent(post.content());
-        entity.setCreatedAt(post.createdAt());
-
-        List<CommentEntity> commentEntities = post.comments().stream()
-                .map(this::toCommentEntity)
-                .collect(Collectors.toList());
-        entity.setComments(commentEntities);
-
-        return entity;
+        return new PostEntity(
+                post.id().value(),
+                post.communityId().value(),
+                post.authorId().value(),
+                post.title(),
+                post.content(),
+                post.createdAt()
+        );
     }
 
     /**
      * Convert Cassandra entity to domain Post
+     * Note: Comments are loaded separately via CommentRepository
      */
     private Post toDomain(PostEntity entity) {
-        List<Comment> comments = entity.getComments().stream()
-                .map(this::toCommentDomain)
-                .collect(Collectors.toList());
-
         return Post.restore(
                 PostId.of(entity.getId()),
                 CommunityId.of(entity.getCommunityId()),
@@ -95,31 +85,7 @@ public class PostRepositoryAdapter implements PostRepository {
                 entity.getTitle(),
                 entity.getContent(),
                 entity.getCreatedAt(),
-                comments
-        );
-    }
-
-    /**
-     * Convert domain Comment to Cassandra entity
-     */
-    private CommentEntity toCommentEntity(Comment comment) {
-        return new CommentEntity(
-                comment.id().value(),
-                comment.authorId().value(),
-                comment.content(),
-                comment.createdAt()
-        );
-    }
-
-    /**
-     * Convert Cassandra entity to domain Comment
-     */
-    private Comment toCommentDomain(CommentEntity entity) {
-        return new Comment(
-                CommentId.of(entity.getId()),
-                UserId.of(entity.getAuthorId()),
-                entity.getContent(),
-                entity.getCreatedAt()
+                List.of() // Comments loaded separately when needed
         );
     }
 }

@@ -4,12 +4,14 @@ import com.levelup.journey.platform.social.domain.model.aggregates.Follow;
 import com.levelup.journey.platform.social.domain.model.commands.CreateFollowCommand;
 import com.levelup.journey.platform.social.domain.model.commands.RemoveFollowCommand;
 import com.levelup.journey.platform.social.domain.model.repositories.FollowRepository;
+import com.levelup.journey.platform.social.domain.model.valueobjects.FollowId;
 import com.levelup.journey.platform.social.domain.services.FollowCommandService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Follow Command Service Implementation
@@ -28,17 +30,13 @@ public class FollowCommandServiceImpl implements FollowCommandService {
 
     @Override
     public Optional<Follow> handle(CreateFollowCommand command) {
-        logger.info("Processing CreateFollowCommand for follow ID: {}, follower: {}, following: {}",
-                command.id(), command.followerId(), command.followingId());
+        // Generate a new UUID for the follow relationship
+        FollowId followId = FollowId.of(UUID.randomUUID().toString());
+
+        logger.info("Processing CreateFollowCommand for generated follow ID: {}, follower: {}, following: {}",
+                followId.value(), command.followerId(), command.followingId());
 
         try {
-            // Check if follow with this ID already exists
-            var existingFollow = followRepository.findById(command.id());
-            if (existingFollow.isPresent()) {
-                logger.warn("Attempted to create follow with existing ID: {}", command.id());
-                throw new IllegalArgumentException("Ya existe una relación de seguimiento con el ID: " + command.id());
-            }
-
             // Check if follow relationship already exists
             var existingRelationship = followRepository.findByFollowerIdAndFollowingId(
                     command.followerId(),
@@ -52,7 +50,7 @@ public class FollowCommandServiceImpl implements FollowCommandService {
 
             // Create new follow
             Follow follow = Follow.create(
-                    command.id(),
+                    followId,
                     command.followerId(),
                     command.followingId()
             );
@@ -64,10 +62,12 @@ public class FollowCommandServiceImpl implements FollowCommandService {
             return Optional.of(savedFollow);
 
         } catch (IllegalArgumentException e) {
-            logger.error("Validation error in CreateFollowCommand for ID: {} - {}", command.id(), e.getMessage());
+            logger.error("Validation error in CreateFollowCommand for follower: {} and following: {} - {}",
+                        command.followerId(), command.followingId(), e.getMessage());
             throw e;
         } catch (Exception e) {
-            logger.error("Unexpected error processing CreateFollowCommand for ID: {}", command.id(), e);
+            logger.error("Unexpected error processing CreateFollowCommand for follower: {} and following: {}",
+                        command.followerId(), command.followingId(), e);
             return Optional.empty();
         }
     }
