@@ -3,6 +3,7 @@ package com.levelup.journey.platform.post.infrastructure.persistence.cassandra.e
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.cassandra.core.mapping.CassandraType;
 import org.springframework.data.cassandra.core.mapping.UserDefinedType;
 
 import java.time.Instant;
@@ -16,8 +17,12 @@ import java.time.Instant;
 @AllArgsConstructor
 @UserDefinedType("comment")
 public class CommentEntity {
+    @CassandraType(type = CassandraType.Name.UUID)
     private String id;
+
+    @CassandraType(type = CassandraType.Name.UUID)
     private String authorId;
+
     private String content;
     private Instant createdAt;
 }
