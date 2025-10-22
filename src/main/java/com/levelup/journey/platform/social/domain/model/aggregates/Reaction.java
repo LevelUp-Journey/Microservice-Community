@@ -8,6 +8,7 @@ import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
 
 import java.time.Instant;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * Reaction aggregate root
@@ -31,7 +32,8 @@ public final class Reaction extends AggregateRoot {
     /**
      * Factory method to create a new reaction (emits event)
      */
-    public static Reaction create(ReactionId id, PostId postId, UserId userId, ReactionType reactionType) {
+    public static Reaction create(PostId postId, UserId userId, ReactionType reactionType) {
+        ReactionId id = ReactionId.of(UUID.randomUUID().toString());
         Reaction reaction = new Reaction(id, postId, userId, reactionType, Instant.now());
         reaction.recordEvent(new ReactionCreated(
                 id.value(),

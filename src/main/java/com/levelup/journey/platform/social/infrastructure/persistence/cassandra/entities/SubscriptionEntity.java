@@ -3,7 +3,6 @@ package com.levelup.journey.platform.social.infrastructure.persistence.cassandra
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.cassandra.core.mapping.CassandraType;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 import org.springframework.data.cassandra.core.mapping.Table;
 
@@ -20,14 +19,7 @@ import java.time.Instant;
 public class SubscriptionEntity {
 
     @PrimaryKey
-    @CassandraType(type = CassandraType.Name.UUID)
-    private String id;
-
-    @CassandraType(type = CassandraType.Name.UUID)
-    private String userId;
-
-    @CassandraType(type = CassandraType.Name.UUID)
-    private String communityId;
+    private SubscriptionPrimaryKey id;
 
     private Instant createdAt;
 }

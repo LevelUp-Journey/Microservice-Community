@@ -4,9 +4,11 @@ import com.levelup.journey.platform.post.domain.model.aggregates.Post;
 import com.levelup.journey.platform.post.domain.model.commands.AddCommentCommand;
 import com.levelup.journey.platform.post.domain.model.commands.PublishPostCommand;
 import com.levelup.journey.platform.post.domain.model.queries.GetCommunityByIdQuery;
+import com.levelup.journey.platform.post.domain.model.queries.GetCommentsByPostIdQuery;
 import com.levelup.journey.platform.post.domain.model.repositories.PostRepository;
-import com.levelup.journey.platform.post.domain.model.valueobjects.CommentId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
+import com.levelup.journey.platform.post.domain.services.CommentCommandService;
+import com.levelup.journey.platform.post.domain.services.CommentQueryService;
 import com.levelup.journey.platform.post.domain.services.CommunityQueryService;
 import com.levelup.journey.platform.post.domain.services.PostCommandService;
 import org.slf4j.Logger;
@@ -19,6 +21,7 @@ import java.util.UUID;
 /**
  * Post Command Service Implementation
  * Handles commands for Post aggregate
+ * Comments are now handled by CommentCommandService
  */
 @Service
 public class PostCommandServiceImpl implements PostCommandService {
@@ -27,11 +30,17 @@ public class PostCommandServiceImpl implements PostCommandService {
 
     private final PostRepository postRepository;
     private final CommunityQueryService communityQueryService;
+    private final CommentCommandService commentCommandService;
+    private final CommentQueryService commentQueryService;
 
     public PostCommandServiceImpl(PostRepository postRepository,
-                                  CommunityQueryService communityQueryService) {
+                                  CommunityQueryService communityQueryService,
+                                  CommentCommandService commentCommandService,
+                                  CommentQueryService commentQueryService) {
         this.postRepository = postRepository;
         this.communityQueryService = communityQueryService;
+        this.commentCommandService = commentCommandService;
+        this.commentQueryService = commentQueryService;
     }
 
     @Override
@@ -84,52 +93,52 @@ public class PostCommandServiceImpl implements PostCommandService {
 
     @Override
     public Optional<Post> handle(AddCommentCommand command) {
-        // Generate a new UUID for the comment
-        CommentId commentId = CommentId.of(UUID.randomUUID().toString());
-
-        logger.info("Processing AddCommentCommand for generated comment ID: {} on post: {}, authorId: {}",
-                   commentId.value(), command.postId(), command.authorId());
+        logger.info("Processing AddCommentCommand on post: {}, authorId: {}",
+                   command.postId(), command.authorId());
 
         try {
-            // Find existing post
-            Optional<Post> postOptional = postRepository.findById(command.postId());
+            // Delegate to CommentCommandService to handle comment creation
+            var commentOptional = commentCommandService.handle(command);
 
-            if (postOptional.isEmpty()) {
-                logger.warn("Post not found with ID: {} for adding comment", command.postId());
+            if (commentOptional.isEmpty()) {
+                logger.warn("Failed to add comment to post: {}", command.postId());
                 return Optional.empty();
             }
 
-            Post post = postOptional.get();
+            logger.info("Comment added successfully with ID: {} to post: {}",
+                       commentOptional.get().id().value(), command.postId());
 
-            // Check if comment with this ID already exists in the post (very unlikely with UUID)
-            boolean commentExists = post.comments().stream()
-                    .anyMatch(comment -> comment.id().equals(commentId));
+            // Load and return the post with comments
+            Optional<Post> postOptional = postRepository.findById(command.postId());
 
-            if (commentExists) {
-                logger.warn("Attempted to add comment with existing ID: {} to post: {}", commentId, command.postId());
-                throw new IllegalArgumentException("Ya existe un comentario con el ID: " + commentId + " en este post");
+            if (postOptional.isPresent()) {
+                Post post = postOptional.get();
+                // Load comments separately
+                var comments = commentQueryService.handle(new GetCommentsByPostIdQuery(command.postId()));
+
+                // Restore post with loaded comments
+                Post postWithComments = Post.restore(
+                    post.id(),
+                    post.communityId(),
+                    post.authorId(),
+                    post.title(),
+                    post.content(),
+                    post.createdAt(),
+                    comments
+                );
+
+                return Optional.of(postWithComments);
             }
 
-            // Add comment to post
-            post.addComment(
-                    commentId,
-                    command.authorId(),
-                    command.content()
-            );
-
-            // Save updated post
-            Post savedPost = postRepository.save(post);
-            logger.info("Comment added successfully with ID: {} to post: {}", commentId, command.postId());
-
-            return Optional.of(savedPost);
+            return Optional.empty();
 
         } catch (IllegalArgumentException e) {
-            logger.error("Validation error in AddCommentCommand for comment ID: {} on post: {} - {}",
-                        commentId, command.postId(), e.getMessage());
+            logger.error("Validation error in AddCommentCommand on post: {} - {}",
+                        command.postId(), e.getMessage());
             throw e; // Re-throw validation errors
         } catch (Exception e) {
-            logger.error("Unexpected error processing AddCommentCommand for comment ID: {} on post: {}",
-                        commentId, command.postId(), e);
+            logger.error("Unexpected error processing AddCommentCommand on post: {}",
+                        command.postId(), e);
             return Optional.empty(); // Return empty for unexpected errors
         }
     }

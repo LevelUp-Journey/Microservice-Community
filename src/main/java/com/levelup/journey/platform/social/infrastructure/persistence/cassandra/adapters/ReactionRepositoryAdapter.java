@@ -7,11 +7,13 @@ import com.levelup.journey.platform.social.domain.model.valueobjects.ReactionId;
 import com.levelup.journey.platform.social.domain.model.valueobjects.ReactionType;
 import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities.ReactionEntity;
+import com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities.ReactionPrimaryKey;
 import com.levelup.journey.platform.social.infrastructure.persistence.cassandra.repositories.ReactionCassandraRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -36,43 +38,59 @@ public class ReactionRepositoryAdapter implements ReactionRepository {
 
     @Override
     public Optional<Reaction> findById(ReactionId id) {
-        return cassandraRepository.findById(id.value())
+        // Since we're using composite keys, we need to search through all reactions
+        // This is inefficient but works for the current design
+        return cassandraRepository.findAll().stream()
+                .filter(entity -> {
+                    String syntheticId = entity.getId().getPostId().toString() + "-" + entity.getId().getUserId().toString();
+                    return syntheticId.equals(id.value());
+                })
+                .findFirst()
                 .map(this::toDomain);
     }
 
     @Override
     public List<Reaction> findByPostId(PostId postId) {
-        return cassandraRepository.findByPostId(postId.value()).stream()
+        return cassandraRepository.findById_PostId(UUID.fromString(postId.value())).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<Reaction> findByUserId(UserId userId) {
-        return cassandraRepository.findByUserId(userId.value()).stream()
+        return cassandraRepository.findById_UserId(UUID.fromString(userId.value())).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     public Optional<Reaction> findByPostIdAndUserId(PostId postId, UserId userId) {
-        return cassandraRepository.findByPostIdAndUserId(postId.value(), userId.value())
+        return cassandraRepository.findByPostIdAndUserId(UUID.fromString(postId.value()), UUID.fromString(userId.value()))
                 .map(this::toDomain);
     }
 
     @Override
     public void deleteById(ReactionId id) {
-        cassandraRepository.deleteById(id.value());
+        // Since we're using composite keys, we need to find and delete the entity
+        cassandraRepository.findAll().stream()
+                .filter(entity -> {
+                    String syntheticId = entity.getId().getPostId().toString() + "-" + entity.getId().getUserId().toString();
+                    return syntheticId.equals(id.value());
+                })
+                .findFirst()
+                .ifPresent(cassandraRepository::delete);
     }
 
     /**
      * Convert domain Reaction to Cassandra entity
      */
     private ReactionEntity toEntity(Reaction reaction) {
+        ReactionPrimaryKey primaryKey = new ReactionPrimaryKey(
+                UUID.fromString(reaction.postId().value()),
+                UUID.fromString(reaction.userId().value())
+        );
         return new ReactionEntity(
-                reaction.id().value(),
-                reaction.postId().value(),
-                reaction.userId().value(),
+                primaryKey,
                 reaction.reactionType().name(),
                 reaction.createdAt()
         );
@@ -82,10 +100,12 @@ public class ReactionRepositoryAdapter implements ReactionRepository {
      * Convert Cassandra entity to domain Reaction
      */
     private Reaction toDomain(ReactionEntity entity) {
+        // Create a synthetic ReactionId based on the composite key
+        String syntheticId = entity.getId().getPostId().toString() + "-" + entity.getId().getUserId().toString();
         return Reaction.restore(
-                ReactionId.of(entity.getId()),
-                PostId.of(entity.getPostId()),
-                UserId.of(entity.getUserId()),
+                ReactionId.of(syntheticId),
+                PostId.of(entity.getId().getPostId().toString()),
+                UserId.of(entity.getId().getUserId().toString()),
                 ReactionType.valueOf(entity.getReactionType()),
                 entity.getCreatedAt()
         );

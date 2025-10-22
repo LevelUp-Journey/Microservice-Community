@@ -8,11 +8,6 @@ import jakarta.validation.constraints.Pattern;
  * Request payload for creating a new subscription
  */
 public record CreateSubscriptionResource(
-        @NotBlank(message = "El ID de la suscripción es obligatorio")
-        @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                message = "El ID debe ser un UUID válido")
-        String id,
-
         @NotBlank(message = "El ID del usuario es obligatorio")
         @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
                 message = "El ID del usuario debe ser un UUID válido")

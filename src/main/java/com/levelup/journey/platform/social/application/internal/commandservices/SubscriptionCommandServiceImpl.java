@@ -28,17 +28,10 @@ public class SubscriptionCommandServiceImpl implements SubscriptionCommandServic
 
     @Override
     public Optional<Subscription> handle(CreateSubscriptionCommand command) {
-        logger.info("Processing CreateSubscriptionCommand for subscription ID: {}, userId: {}, communityId: {}",
-                command.id(), command.userId(), command.communityId());
+        logger.info("Processing CreateSubscriptionCommand for userId: {}, communityId: {}",
+                command.userId(), command.communityId());
 
         try {
-            // Check if subscription with this ID already exists
-            var existingSubscription = subscriptionRepository.findById(command.id());
-            if (existingSubscription.isPresent()) {
-                logger.warn("Attempted to create subscription with existing ID: {}", command.id());
-                throw new IllegalArgumentException("Ya existe una suscripción con el ID: " + command.id());
-            }
-
             // Check if user is already subscribed to this community
             var userSubscription = subscriptionRepository.findByUserIdAndCommunityId(
                     command.userId(),
@@ -52,7 +45,6 @@ public class SubscriptionCommandServiceImpl implements SubscriptionCommandServic
 
             // Create new subscription
             Subscription subscription = Subscription.create(
-                    command.id(),
                     command.userId(),
                     command.communityId()
             );
@@ -64,10 +56,12 @@ public class SubscriptionCommandServiceImpl implements SubscriptionCommandServic
             return Optional.of(savedSubscription);
 
         } catch (IllegalArgumentException e) {
-            logger.error("Validation error in CreateSubscriptionCommand for ID: {} - {}", command.id(), e.getMessage());
+            logger.error("Validation error in CreateSubscriptionCommand for userId: {} and communityId: {} - {}", 
+                    command.userId(), command.communityId(), e.getMessage());
             throw e;
         } catch (Exception e) {
-            logger.error("Unexpected error processing CreateSubscriptionCommand for ID: {}", command.id(), e);
+            logger.error("Unexpected error processing CreateSubscriptionCommand for userId: {} and communityId: {}", 
+                    command.userId(), command.communityId(), e);
             return Optional.empty();
         }
     }
