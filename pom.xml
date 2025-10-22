@@ -8,7 +8,7 @@
         <version>3.5.6</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.levelup.journey.platform</groupId>
+    <groupId>com.levelup.journey.platform.post</groupId>
     <artifactId>journey</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>community</name>
@@ -29,12 +29,41 @@
     <properties>
         <java.version>21</java.version>
         <springdoc.version>2.1.0</springdoc.version>
+        <datastax.driver.version>4.17.0</datastax.driver.version>
     </properties>
     <dependencies>
+        <!-- Spring Data Cassandra con DataStax -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+            <artifactId>spring-boot-starter-data-cassandra</artifactId>
         </dependency>
+        
+        <!-- DataStax Java Driver para Cassandra -->
+        <dependency>
+            <groupId>com.datastax.oss</groupId>
+            <artifactId>java-driver-core</artifactId>
+            <version>${datastax.driver.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.datastax.oss</groupId>
+            <artifactId>java-driver-query-builder</artifactId>
+            <version>${datastax.driver.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>com.datastax.oss</groupId>
+            <artifactId>java-driver-mapper-runtime</artifactId>
+            <version>${datastax.driver.version}</version>
+        </dependency>
+
+        <!-- Pluralize library for table naming strategy -->
+        <dependency>
+            <groupId>io.github.encryptorcode</groupId>
+            <artifactId>pluralize</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
