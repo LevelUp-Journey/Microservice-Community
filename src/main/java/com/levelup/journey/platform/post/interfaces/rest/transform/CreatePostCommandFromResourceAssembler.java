@@ -3,6 +3,7 @@ package com.levelup.journey.platform.post.interfaces.rest.transform;
 import com.levelup.journey.platform.post.domain.model.commands.PublishPostCommand;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
+import com.levelup.journey.platform.post.domain.model.valueobjects.ProfileId;
 import com.levelup.journey.platform.post.interfaces.rest.resources.CreatePostResource;
 
 /**
@@ -15,6 +16,7 @@ public class CreatePostCommandFromResourceAssembler {
         return new PublishPostCommand(
                 CommunityId.of(resource.communityId()),
                 UserId.of(resource.authorId()),
+                ProfileId.of(resource.authorProfileId()),
                 resource.title(),
                 resource.content(),
                 imageUrl

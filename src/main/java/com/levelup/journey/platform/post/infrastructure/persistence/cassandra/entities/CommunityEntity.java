@@ -26,6 +26,9 @@ public class CommunityEntity {
     @CassandraType(type = CassandraType.Name.UUID)
     private String ownerId;
 
+    @CassandraType(type = CassandraType.Name.UUID)
+    private String ownerProfileId;
+
     private String name;
     private String description;
     private String imageUrl;

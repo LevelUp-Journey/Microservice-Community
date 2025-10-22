@@ -7,8 +7,10 @@ import com.levelup.journey.platform.post.domain.services.CommunityCommandService
 import com.levelup.journey.platform.post.domain.services.CommunityQueryService;
 import com.levelup.journey.platform.post.interfaces.rest.resources.CommunityResource;
 import com.levelup.journey.platform.post.interfaces.rest.resources.CreateCommunityResource;
+import com.levelup.journey.platform.post.interfaces.rest.resources.UpdateCommunityResource;
 import com.levelup.journey.platform.post.interfaces.rest.transform.CommunityResourceFromEntityAssembler;
 import com.levelup.journey.platform.post.interfaces.rest.transform.CreateCommunityCommandFromResourceAssembler;
+import com.levelup.journey.platform.post.interfaces.rest.transform.UpdateCommunityCommandFromResourceAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -84,6 +86,49 @@ public class CommunityController {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             logger.error("Unexpected error creating community with name: {}", resource.name(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Update an existing community
+     */
+    @PutMapping("/{communityId}")
+    @Operation(summary = "Update community", description = "Update an existing community's name, description, and image URL")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Community updated successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CommunityResource.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input data or community ID format",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Community not found",
+                    content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content)
+    })
+    public ResponseEntity<CommunityResource> updateCommunity(
+            @PathVariable String communityId,
+            @Valid @RequestBody UpdateCommunityResource resource) {
+        logger.info("Updating community with ID: {}, name: {}", communityId, resource.name());
+
+        try {
+            var command = UpdateCommunityCommandFromResourceAssembler.toCommandFromResource(communityId, resource);
+            var community = communityCommandService.handle(command);
+
+            if (community.isEmpty()) {
+                logger.warn("Failed to update community with ID: {} - service returned empty result", communityId);
+                return ResponseEntity.notFound().build();
+            }
+
+            var communityResource = CommunityResourceFromEntityAssembler.toResourceFromEntity(community.get());
+            logger.info("Community updated successfully with ID: {}", communityResource.id());
+            return ResponseEntity.ok(communityResource);
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Validation error updating community with ID: {} - {}", communityId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error("Unexpected error updating community with ID: {}", communityId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

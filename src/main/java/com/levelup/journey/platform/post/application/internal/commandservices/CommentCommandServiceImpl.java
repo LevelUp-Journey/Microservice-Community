@@ -42,6 +42,7 @@ public class CommentCommandServiceImpl implements CommentCommandService {
         var comment = new Comment(
                 commentId,
                 command.authorId(),
+                command.authorProfileId(),
                 command.content(),
                 imageUrl,
                 null // createdAt will be set to Instant.now() by constructor

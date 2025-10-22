@@ -5,6 +5,7 @@ import com.levelup.journey.platform.post.domain.model.repositories.CommentReposi
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommentId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
+import com.levelup.journey.platform.post.domain.model.valueobjects.ProfileId;
 import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.entities.CommentEntity;
 import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.repositories.CommentCassandraRepository;
 import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
@@ -62,6 +63,7 @@ public class CommentRepositoryAdapter implements CommentRepository {
                 postId.value(),
                 comment.id().value(),
                 comment.authorId().value(),
+                comment.authorProfileId().value(),
                 comment.content(),
                 comment.imageUrl() != null && !comment.imageUrl().isEmpty() ? comment.imageUrl().url() : null,
                 comment.createdAt()
@@ -76,6 +78,7 @@ public class CommentRepositoryAdapter implements CommentRepository {
         return new Comment(
                 CommentId.of(entity.getCommentId()),
                 UserId.of(entity.getAuthorId()),
+                ProfileId.of(entity.getAuthorProfileId()),
                 entity.getContent(),
                 imageUrl,
                 entity.getCreatedAt()

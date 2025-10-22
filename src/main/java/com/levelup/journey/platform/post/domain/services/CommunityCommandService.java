@@ -2,6 +2,7 @@ package com.levelup.journey.platform.post.domain.services;
 
 import com.levelup.journey.platform.post.domain.model.aggregates.Community;
 import com.levelup.journey.platform.post.domain.model.commands.CreateCommunityCommand;
+import com.levelup.journey.platform.post.domain.model.commands.UpdateCommunityCommand;
 
 import java.util.Optional;
 
@@ -17,4 +18,11 @@ public interface CommunityCommandService {
      * @return the created community
      */
     Optional<Community> handle(CreateCommunityCommand command);
+
+    /**
+     * Handles the command to update an existing community
+     * @param command the update community command
+     * @return the updated community
+     */
+    Optional<Community> handle(UpdateCommunityCommand command);
 }

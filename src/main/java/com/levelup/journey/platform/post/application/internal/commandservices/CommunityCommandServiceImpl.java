@@ -2,6 +2,7 @@ package com.levelup.journey.platform.post.application.internal.commandservices;
 
 import com.levelup.journey.platform.post.domain.model.aggregates.Community;
 import com.levelup.journey.platform.post.domain.model.commands.CreateCommunityCommand;
+import com.levelup.journey.platform.post.domain.model.commands.UpdateCommunityCommand;
 import com.levelup.journey.platform.post.domain.model.repositories.CommunityRepository;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.services.CommunityCommandService;
@@ -49,6 +50,7 @@ public class CommunityCommandServiceImpl implements CommunityCommandService {
             Community community = Community.create(
                     communityId,
                     command.ownerId(),
+                    command.ownerProfileId(),
                     command.name(),
                     command.description(),
                     imageUrl
@@ -65,6 +67,46 @@ public class CommunityCommandServiceImpl implements CommunityCommandService {
             throw e; // Re-throw validation errors
         } catch (Exception e) {
             logger.error("Unexpected error processing CreateCommunityCommand for ID: {}", communityId, e);
+            return Optional.empty(); // Return empty for unexpected errors
+        }
+    }
+
+    @Override
+    public Optional<Community> handle(UpdateCommunityCommand command) {
+        logger.info("Processing UpdateCommunityCommand for community ID: {}, name: {}",
+                   command.communityId().value(), command.name());
+
+        try {
+            // Find the community
+            var communityOptional = communityRepository.findById(command.communityId());
+            if (communityOptional.isEmpty()) {
+                logger.warn("Attempted to update non-existent community ID: {}", command.communityId());
+                throw new IllegalArgumentException("La comunidad con ID: " + command.communityId() + " no existe");
+            }
+
+            Community community = communityOptional.get();
+
+            // Update community information
+            var imageUrl = command.imageUrl() != null ? ImageUrl.of(command.imageUrl()) : ImageUrl.empty();
+            community.update(
+                    command.name(),
+                    command.description(),
+                    imageUrl
+            );
+
+            // Save updated community
+            Community updatedCommunity = communityRepository.save(community);
+            logger.info("Community updated successfully with ID: {}", updatedCommunity.id());
+
+            return Optional.of(updatedCommunity);
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Validation error in UpdateCommunityCommand for ID: {} - {}",
+                        command.communityId(), e.getMessage());
+            throw e; // Re-throw validation errors
+        } catch (Exception e) {
+            logger.error("Unexpected error processing UpdateCommunityCommand for ID: {}",
+                        command.communityId(), e);
             return Optional.empty(); // Return empty for unexpected errors
         }
     }

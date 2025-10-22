@@ -20,6 +20,11 @@ public record CreatePostResource(
                 message = "El ID del autor debe ser un UUID válido")
         String authorId,
 
+        @NotBlank(message = "El ID del perfil del autor es obligatorio")
+        @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+                message = "El ID del perfil del autor debe ser un UUID válido")
+        String authorProfileId,
+
         @NotBlank(message = "El título es obligatorio")
         @Size(min = 1, max = 200, message = "El título debe tener entre 1 y 200 caracteres")
         String title,

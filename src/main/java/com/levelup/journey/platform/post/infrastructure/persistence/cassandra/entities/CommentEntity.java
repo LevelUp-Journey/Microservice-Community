@@ -33,6 +33,9 @@ public class CommentEntity {
     @CassandraType(type = CassandraType.Name.UUID)
     private String authorId;
 
+    @CassandraType(type = CassandraType.Name.UUID)
+    private String authorProfileId;
+
     private String content;
     private String imageUrl;
     private Instant createdAt;
