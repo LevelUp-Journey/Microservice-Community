@@ -68,6 +68,9 @@ public class PostQueryServiceImpl implements PostQueryService {
     public List<Post> handle(GetAllPostsQuery query) {
         List<Post> posts = postRepository.findAll();
 
+        // Sort by creation date descending (most recent first)
+        posts.sort((p1, p2) -> p2.createdAt().compareTo(p1.createdAt()));
+
         // Load comments for each post
         return posts.stream()
                 .map(post -> {
@@ -90,6 +93,9 @@ public class PostQueryServiceImpl implements PostQueryService {
     @Transactional(readOnly = true)
     public List<Post> handle(GetPostsByCommunityIdQuery query) {
         List<Post> posts = postRepositoryAdapter.findByCommunityId(query.communityId());
+
+        // Sort by creation date descending (most recent first)
+        posts.sort((p1, p2) -> p2.createdAt().compareTo(p1.createdAt()));
 
         // Load comments for each post
         return posts.stream()

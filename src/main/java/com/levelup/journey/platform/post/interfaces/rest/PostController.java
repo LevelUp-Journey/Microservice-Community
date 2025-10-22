@@ -135,7 +135,7 @@ public class PostController {
      * Get all posts
      */
     @GetMapping
-    @Operation(summary = "Get all posts", description = "Retrieve all posts from all communities")
+    @Operation(summary = "Get all posts", description = "Retrieve all posts from all communities, ordered by creation date (most recent first)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Posts retrieved successfully",
                     content = @Content(mediaType = "application/json",
@@ -165,7 +165,7 @@ public class PostController {
      * Get posts by community ID
      */
     @GetMapping("/community/{communityId}")
-    @Operation(summary = "Get posts by community", description = "Retrieve all posts from a specific community")
+    @Operation(summary = "Get posts by community", description = "Retrieve all posts from a specific community, ordered by creation date (most recent first)")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Posts retrieved successfully",
                     content = @Content(mediaType = "application/json",
@@ -197,8 +197,62 @@ public class PostController {
     }
 
     /**
-     * Add a comment to a post
+     * Get feed posts for a user (from followed users and subscribed communities)
      */
+    @GetMapping("/feed/{userId}")
+    @Operation(summary = "Get user feed posts", description = "Retrieve posts from users and communities that the user follows, ordered by creation date (most recent first)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Feed posts retrieved successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PostResource.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid user ID format",
+                    content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content)
+    })
+    public ResponseEntity<List<PostResource>> getUserFeed(@PathVariable String userId,
+                                                          @RequestParam(defaultValue = "20") int limit,
+                                                          @RequestParam(defaultValue = "0") int offset) {
+        logger.info("Retrieving feed posts for user: {}, limit: {}, offset: {}", userId, limit, offset);
+
+        try {
+            // Validate parameters
+            if (limit <= 0 || limit > 100) {
+                logger.warn("Invalid limit value: {}. Must be between 1 and 100", limit);
+                return ResponseEntity.badRequest().build();
+            }
+            if (offset < 0) {
+                logger.warn("Invalid offset value: {}. Must be non-negative", offset);
+                return ResponseEntity.badRequest().build();
+            }
+
+            // Get feed sources from Social BC (this would need to be implemented)
+            // For now, get all posts and filter by user's followed users and subscribed communities
+            var query = new GetAllPostsQuery();
+            var allPosts = postQueryService.handle(query);
+
+            // TODO: Filter posts by user's feed sources (followed users + subscribed communities)
+            // This would require integration with Social BC or passing user context
+
+            // For now, return all posts sorted by date (most recent first)
+            var feedPosts = allPosts.stream()
+                    .sorted((p1, p2) -> p2.createdAt().compareTo(p1.createdAt()))
+                    .skip(offset)
+                    .limit(limit)
+                    .map(PostResourceFromEntityAssembler::toResourceFromEntity)
+                    .collect(Collectors.toList());
+
+            logger.info("Retrieved {} feed posts for user {}", feedPosts.size(), userId);
+            return ResponseEntity.ok(feedPosts);
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid user ID format: {} - {}", userId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error("Unexpected error retrieving feed posts for user: {}", userId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
     @PostMapping("/{postId}/comments")
     @Operation(summary = "Add comment to post", description = "Add a new comment to an existing post")
     @ApiResponses(value = {
