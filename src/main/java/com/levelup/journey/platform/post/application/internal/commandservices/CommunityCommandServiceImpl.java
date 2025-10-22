@@ -5,6 +5,7 @@ import com.levelup.journey.platform.post.domain.model.commands.CreateCommunityCo
 import com.levelup.journey.platform.post.domain.model.repositories.CommunityRepository;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.services.CommunityCommandService;
+import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -44,11 +45,13 @@ public class CommunityCommandServiceImpl implements CommunityCommandService {
             }
 
             // Create new community from command
+            var imageUrl = command.imageUrl() != null ? ImageUrl.of(command.imageUrl()) : ImageUrl.empty();
             Community community = Community.create(
                     communityId,
                     command.ownerId(),
                     command.name(),
-                    command.description()
+                    command.description(),
+                    imageUrl
             );
 
             // Save community

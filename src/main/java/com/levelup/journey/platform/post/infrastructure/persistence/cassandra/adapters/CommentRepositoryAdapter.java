@@ -7,6 +7,7 @@ import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.entities.CommentEntity;
 import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.repositories.CommentCassandraRepository;
+import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -62,6 +63,7 @@ public class CommentRepositoryAdapter implements CommentRepository {
                 comment.id().value(),
                 comment.authorId().value(),
                 comment.content(),
+                comment.imageUrl() != null && !comment.imageUrl().isEmpty() ? comment.imageUrl().url() : null,
                 comment.createdAt()
         );
     }
@@ -70,10 +72,12 @@ public class CommentRepositoryAdapter implements CommentRepository {
      * Convert Cassandra entity to domain Comment
      */
     private Comment toDomain(CommentEntity entity) {
+        ImageUrl imageUrl = entity.getImageUrl() != null ? ImageUrl.of(entity.getImageUrl()) : ImageUrl.empty();
         return new Comment(
                 CommentId.of(entity.getCommentId()),
                 UserId.of(entity.getAuthorId()),
                 entity.getContent(),
+                imageUrl,
                 entity.getCreatedAt()
         );
     }

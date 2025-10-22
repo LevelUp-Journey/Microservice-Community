@@ -1,5 +1,6 @@
 package com.levelup.journey.platform.post.interfaces.rest.resources;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -25,6 +26,9 @@ public record CreatePostResource(
 
         @NotBlank(message = "El contenido es obligatorio")
         @Size(min = 1, max = 5000, message = "El contenido debe tener entre 1 y 5000 caracteres")
-        String content
+        String content,
+
+        @JsonProperty(value = "imageUrl", required = false)
+        Object imageUrl
 ) {
 }

@@ -11,6 +11,7 @@ public record CommunityResource(
         String ownerId,
         String name,
         String description,
+        String imageUrl,
         Instant createdAt
 ) {
 }

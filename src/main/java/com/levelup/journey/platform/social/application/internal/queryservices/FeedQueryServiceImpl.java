@@ -1,8 +1,6 @@
 package com.levelup.journey.platform.social.application.internal.queryservices;
 
 import com.levelup.journey.platform.social.domain.model.queries.GetFeedByUserIdQuery;
-import com.levelup.journey.platform.social.domain.model.queries.GetFollowingByUserIdQuery;
-import com.levelup.journey.platform.social.domain.model.queries.GetSubscriptionsByUserIdQuery;
 import com.levelup.journey.platform.social.domain.model.repositories.FollowRepository;
 import com.levelup.journey.platform.social.domain.model.repositories.SubscriptionRepository;
 import com.levelup.journey.platform.social.domain.services.FeedQueryService;
@@ -12,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Feed Query Service Implementation
@@ -41,7 +38,6 @@ public class FeedQueryServiceImpl implements FeedQueryService {
             List<String> feedSources = new ArrayList<>();
 
             // Get users the current user is following
-            var followingQuery = new GetFollowingByUserIdQuery(query.userId());
             var following = followRepository.findByFollowerId(query.userId());
 
             logger.info("User {} is following {} users", query.userId(), following.size());
@@ -50,7 +46,6 @@ public class FeedQueryServiceImpl implements FeedQueryService {
             following.forEach(follow -> feedSources.add(follow.followingId().value()));
 
             // Get communities the user is subscribed to
-            var subscriptionsQuery = new GetSubscriptionsByUserIdQuery(query.userId());
             var subscriptions = subscriptionRepository.findByUserId(query.userId());
 
             logger.info("User {} is subscribed to {} communities", query.userId(), subscriptions.size());

@@ -6,6 +6,7 @@ import com.levelup.journey.platform.post.domain.model.repositories.CommentReposi
 import com.levelup.journey.platform.post.domain.model.repositories.PostRepository;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommentId;
 import com.levelup.journey.platform.post.domain.services.CommentCommandService;
+import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,11 +38,13 @@ public class CommentCommandServiceImpl implements CommentCommandService {
 
         // Create and save the comment
         var commentId = CommentId.random();
+        var imageUrl = command.imageUrl() != null ? ImageUrl.of(command.imageUrl()) : ImageUrl.empty();
         var comment = new Comment(
                 commentId,
                 command.authorId(),
                 command.content(),
-                null // Will be set to Instant.now() by constructor
+                imageUrl,
+                null // createdAt will be set to Instant.now() by constructor
         );
 
         commentRepository.save(comment, command.postId());

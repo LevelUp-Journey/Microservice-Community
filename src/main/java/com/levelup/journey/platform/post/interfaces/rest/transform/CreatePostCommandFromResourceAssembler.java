@@ -11,11 +11,13 @@ import com.levelup.journey.platform.post.interfaces.rest.resources.CreatePostRes
 public class CreatePostCommandFromResourceAssembler {
 
     public static PublishPostCommand toCommandFromResource(CreatePostResource resource) {
+        String imageUrl = resource.imageUrl() != null ? resource.imageUrl().toString() : null;
         return new PublishPostCommand(
                 CommunityId.of(resource.communityId()),
                 UserId.of(resource.authorId()),
                 resource.title(),
-                resource.content()
+                resource.content(),
+                imageUrl
         );
     }
 }

@@ -10,6 +10,7 @@ public record CommentResource(
         String id,
         String authorId,
         String content,
+        String imageUrl,
         Instant createdAt
 ) {
 }

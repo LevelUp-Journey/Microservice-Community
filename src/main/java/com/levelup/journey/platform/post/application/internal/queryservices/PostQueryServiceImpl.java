@@ -55,6 +55,7 @@ public class PostQueryServiceImpl implements PostQueryService {
                 post.authorId(),
                 post.title(),
                 post.content(),
+                post.imageUrl(),
                 post.createdAt(),
                 comments
         );
@@ -77,6 +78,7 @@ public class PostQueryServiceImpl implements PostQueryService {
                             post.authorId(),
                             post.title(),
                             post.content(),
+                            post.imageUrl(),
                             post.createdAt(),
                             comments
                     );
@@ -99,6 +101,7 @@ public class PostQueryServiceImpl implements PostQueryService {
                             post.authorId(),
                             post.title(),
                             post.content(),
+                            post.imageUrl(),
                             post.createdAt(),
                             comments
                     );
