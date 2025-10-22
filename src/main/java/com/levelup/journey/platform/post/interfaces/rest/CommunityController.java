@@ -63,15 +63,15 @@ public class CommunityController {
                     content = @Content)
     })
     public ResponseEntity<CommunityResource> createCommunity(@Valid @RequestBody CreateCommunityResource resource) {
-        logger.info("Creating community with ID: {}, name: {}, ownerId: {}",
-                   resource.id(), resource.name(), resource.ownerId());
+        logger.info("Creating community with name: {}, ownerId: {}",
+                   resource.name(), resource.ownerId());
 
         try {
             var command = CreateCommunityCommandFromResourceAssembler.toCommandFromResource(resource);
             var community = communityCommandService.handle(command);
 
             if (community.isEmpty()) {
-                logger.warn("Failed to create community with ID: {} - service returned empty result", resource.id());
+                logger.warn("Failed to create community with name: {} - service returned empty result", resource.name());
                 return ResponseEntity.badRequest().build();
             }
 
@@ -80,10 +80,10 @@ public class CommunityController {
             return new ResponseEntity<>(communityResource, HttpStatus.CREATED);
 
         } catch (IllegalArgumentException e) {
-            logger.error("Validation error creating community with ID: {} - {}", resource.id(), e.getMessage());
+            logger.error("Validation error creating community with name: {} - {}", resource.name(), e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            logger.error("Unexpected error creating community with ID: {}", resource.id(), e);
+            logger.error("Unexpected error creating community with name: {}", resource.name(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

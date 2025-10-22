@@ -67,15 +67,15 @@ public class PostController {
                     content = @Content)
     })
     public ResponseEntity<PostResource> createPost(@Valid @RequestBody CreatePostResource resource) {
-        logger.info("Creating post with ID: {}, title: {}, communityId: {}, authorId: {}",
-                   resource.id(), resource.title(), resource.communityId(), resource.authorId());
+        logger.info("Creating post with title: {}, communityId: {}, authorId: {}",
+                   resource.title(), resource.communityId(), resource.authorId());
 
         try {
             var command = CreatePostCommandFromResourceAssembler.toCommandFromResource(resource);
             var post = postCommandService.handle(command);
 
             if (post.isEmpty()) {
-                logger.warn("Failed to create post with ID: {} - service returned empty result", resource.id());
+                logger.warn("Failed to create post with title: {} - service returned empty result", resource.title());
                 return ResponseEntity.badRequest().build();
             }
 
@@ -84,10 +84,10 @@ public class PostController {
             return new ResponseEntity<>(postResource, HttpStatus.CREATED);
 
         } catch (IllegalArgumentException e) {
-            logger.error("Validation error creating post with ID: {} - {}", resource.id(), e.getMessage());
+            logger.error("Validation error creating post with title: {} - {}", resource.title(), e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            logger.error("Unexpected error creating post with ID: {}", resource.id(), e);
+            logger.error("Unexpected error creating post with title: {}", resource.title(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -216,29 +216,29 @@ public class PostController {
     })
     public ResponseEntity<PostResource> addComment(@PathVariable String postId,
                                                    @Valid @RequestBody AddCommentResource resource) {
-        logger.info("Adding comment with ID: {} to post: {}, authorId: {}",
-                   resource.commentId(), postId, resource.authorId());
+        logger.info("Adding comment to post: {}, authorId: {}",
+                   postId, resource.authorId());
 
         try {
             var command = AddCommentCommandFromResourceAssembler.toCommandFromResource(postId, resource);
             var post = postCommandService.handle(command);
 
             if (post.isEmpty()) {
-                logger.warn("Failed to add comment with ID: {} to post: {} - post not found or comment already exists",
-                           resource.commentId(), postId);
+                logger.warn("Failed to add comment to post: {} - post not found or comment already exists",
+                           postId);
                 return ResponseEntity.notFound().build();
             }
 
             var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
-            logger.info("Comment added successfully with ID: {} to post: {}", resource.commentId(), postId);
+            logger.info("Comment added successfully to post: {}", postId);
             return ResponseEntity.ok(postResource);
 
         } catch (IllegalArgumentException e) {
-            logger.error("Validation error adding comment with ID: {} to post: {} - {}",
-                        resource.commentId(), postId, e.getMessage());
+            logger.error("Validation error adding comment to post: {} - {}",
+                        postId, e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            logger.error("Unexpected error adding comment with ID: {} to post: {}", resource.commentId(), postId, e);
+            logger.error("Unexpected error adding comment to post: {}", postId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
