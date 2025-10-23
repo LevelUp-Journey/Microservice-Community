@@ -8,21 +8,18 @@ import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
 
 import java.time.Instant;
 import java.util.Objects;
-import java.util.UUID;
 
 /**
  * Reaction aggregate root
  * Represents a user's reaction to a post
  */
 public final class Reaction extends AggregateRoot {
-    private final ReactionId id;
     private final PostId postId;
     private final UserId userId;
     private final ReactionType reactionType;
     private final Instant createdAt;
 
-    private Reaction(ReactionId id, PostId postId, UserId userId, ReactionType reactionType, Instant createdAt) {
-        this.id = Objects.requireNonNull(id, "Reaction id cannot be null");
+    private Reaction(PostId postId, UserId userId, ReactionType reactionType, Instant createdAt) {
         this.postId = Objects.requireNonNull(postId, "Post id cannot be null");
         this.userId = Objects.requireNonNull(userId, "User id cannot be null");
         this.reactionType = Objects.requireNonNull(reactionType, "Reaction type cannot be null");
@@ -33,10 +30,9 @@ public final class Reaction extends AggregateRoot {
      * Factory method to create a new reaction (emits event)
      */
     public static Reaction create(PostId postId, UserId userId, ReactionType reactionType) {
-        ReactionId id = ReactionId.of(UUID.randomUUID().toString());
-        Reaction reaction = new Reaction(id, postId, userId, reactionType, Instant.now());
+        Reaction reaction = new Reaction(postId, userId, reactionType, Instant.now());
         reaction.recordEvent(new ReactionCreated(
-                id.value(),
+                reaction.id().value(), // Generate synthetic ID for event
                 postId.value(),
                 userId.value(),
                 reactionType.name(),
@@ -48,13 +44,15 @@ public final class Reaction extends AggregateRoot {
     /**
      * Factory method to restore reaction from persistence (no events)
      */
-    public static Reaction restore(ReactionId id, PostId postId, UserId userId, ReactionType reactionType, Instant createdAt) {
-        return new Reaction(id, postId, userId, reactionType, createdAt);
+    public static Reaction restore(PostId postId, UserId userId, ReactionType reactionType, Instant createdAt) {
+        return new Reaction(postId, userId, reactionType, createdAt);
     }
 
     // Getters
     public ReactionId id() {
-        return id;
+        // Generate synthetic ID based on composite key (postId + userId)
+        String syntheticId = postId.value() + "-" + userId.value();
+        return ReactionId.of(syntheticId);
     }
 
     public PostId postId() {
