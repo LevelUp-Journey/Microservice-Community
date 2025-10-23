@@ -100,10 +100,7 @@ public class ReactionRepositoryAdapter implements ReactionRepository {
      * Convert Cassandra entity to domain Reaction
      */
     private Reaction toDomain(ReactionEntity entity) {
-        // Create a synthetic ReactionId based on the composite key
-        String syntheticId = entity.getId().getPostId().toString() + "-" + entity.getId().getUserId().toString();
         return Reaction.restore(
-                ReactionId.of(syntheticId),
                 PostId.of(entity.getId().getPostId().toString()),
                 UserId.of(entity.getId().getUserId().toString()),
                 ReactionType.valueOf(entity.getReactionType()),

@@ -19,8 +19,8 @@ public record CreateReactionResource(
         String userId,
 
         @NotBlank(message = "El tipo de reacción es obligatorio")
-        @Pattern(regexp = "^(LIKE|LOVE|CELEBRATE|SUPPORT|INSIGHTFUL|FUNNY)$",
-                message = "El tipo de reacción debe ser: LIKE, LOVE, CELEBRATE, SUPPORT, INSIGHTFUL o FUNNY")
+        @Pattern(regexp = "^LIKE$",
+                message = "El tipo de reacción debe ser: LIKE")
         String reactionType
 ) {
 }
