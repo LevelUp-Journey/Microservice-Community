@@ -47,6 +47,11 @@ public class CommunityRepositoryAdapter implements CommunityRepository {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public void deleteById(CommunityId id) {
+        cassandraRepository.deleteById(id.value());
+    }
+
     /**
      * Convert domain Community to Cassandra entity
      */
