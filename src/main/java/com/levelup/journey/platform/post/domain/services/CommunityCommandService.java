@@ -2,6 +2,7 @@ package com.levelup.journey.platform.post.domain.services;
 
 import com.levelup.journey.platform.post.domain.model.aggregates.Community;
 import com.levelup.journey.platform.post.domain.model.commands.CreateCommunityCommand;
+import com.levelup.journey.platform.post.domain.model.commands.DeleteCommunityCommand;
 import com.levelup.journey.platform.post.domain.model.commands.UpdateCommunityCommand;
 
 import java.util.Optional;
@@ -25,4 +26,11 @@ public interface CommunityCommandService {
      * @return the updated community
      */
     Optional<Community> handle(UpdateCommunityCommand command);
+
+    /**
+     * Handles the command to delete a community
+     * @param command the delete community command
+     * @return true if deletion was successful, false otherwise
+     */
+    boolean handle(DeleteCommunityCommand command);
 }
