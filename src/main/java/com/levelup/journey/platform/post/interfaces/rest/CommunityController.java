@@ -2,6 +2,7 @@ package com.levelup.journey.platform.post.interfaces.rest;
 
 import com.levelup.journey.platform.post.domain.model.queries.GetAllCommunitiesQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetCommunityByIdQuery;
+import com.levelup.journey.platform.post.domain.model.commands.DeleteCommunityCommand;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.services.CommunityCommandService;
 import com.levelup.journey.platform.post.domain.services.CommunityQueryService;
@@ -23,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,12 +54,15 @@ public class CommunityController {
      * Create a new community
      */
     @PostMapping
-    @Operation(summary = "Create a new community", description = "Create a new community with a name and description")
+    @PreAuthorize("hasAuthority('TEACHER') or hasAuthority('ADMIN')")
+    @Operation(summary = "Create a new community", description = "Create a new community with a name and description. Only teachers and admins can create communities.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Community created successfully",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = CommunityResource.class))),
             @ApiResponse(responseCode = "400", description = "Invalid input data or community already exists",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "Access denied - only teachers and admins can create communities",
                     content = @Content),
             @ApiResponse(responseCode = "409", description = "Community with this ID already exists",
                     content = @Content),
@@ -94,12 +99,15 @@ public class CommunityController {
      * Update an existing community
      */
     @PutMapping("/{communityId}")
-    @Operation(summary = "Update community", description = "Update an existing community's name, description, and image URL")
+    @PreAuthorize("hasAuthority('TEACHER') or hasAuthority('ADMIN')")
+    @Operation(summary = "Update community", description = "Update an existing community's name, description, and image URL. Only teachers and admins can update communities.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Community updated successfully",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = CommunityResource.class))),
             @ApiResponse(responseCode = "400", description = "Invalid input data or community ID format",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "Access denied - only teachers and admins can update communities",
                     content = @Content),
             @ApiResponse(responseCode = "404", description = "Community not found",
                     content = @Content),
@@ -129,6 +137,49 @@ public class CommunityController {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             logger.error("Unexpected error updating community with ID: {}", communityId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Delete a community
+     */
+    @DeleteMapping("/{communityId}")
+    @PreAuthorize("hasAuthority('TEACHER') or hasAuthority('ADMIN')")
+    @Operation(summary = "Delete community", description = "Delete a community. Only the community owner or admin can delete communities.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Community deleted successfully",
+                    content = @Content),
+            @ApiResponse(responseCode = "400", description = "Invalid community ID format",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "Access denied - only community owner or admin can delete communities",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Community not found",
+                    content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content)
+    })
+    public ResponseEntity<Void> deleteCommunity(@PathVariable String communityId,
+                                                @RequestParam String requesterId) {
+        logger.info("Deleting community with ID: {}, requesterId: {}", communityId, requesterId);
+
+        try {
+            var command = DeleteCommunityCommand.of(communityId, requesterId);
+            boolean deleted = communityCommandService.handle(command);
+
+            if (!deleted) {
+                logger.warn("Failed to delete community with ID: {} - community not found", communityId);
+                return ResponseEntity.notFound().build();
+            }
+
+            logger.info("Community deleted successfully with ID: {}", communityId);
+            return ResponseEntity.noContent().build();
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Validation error deleting community with ID: {} - {}", communityId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error("Unexpected error deleting community with ID: {}", communityId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

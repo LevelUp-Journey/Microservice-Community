@@ -1,5 +1,6 @@
 package com.levelup.journey.platform.post.interfaces.rest;
 
+import com.levelup.journey.platform.post.domain.model.commands.DeletePostCommand;
 import com.levelup.journey.platform.post.domain.model.queries.GetAllPostsQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetPostByIdQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetPostsByCommunityIdQuery;
@@ -318,6 +319,48 @@ public class PostController {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             logger.error("Unexpected error adding comment to post: {}", postId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Delete a post
+     */
+    @DeleteMapping("/{postId}")
+    @Operation(summary = "Delete post", description = "Delete a post. Only the post author, community owner, or admin can delete posts.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Post deleted successfully",
+                    content = @Content),
+            @ApiResponse(responseCode = "400", description = "Invalid post ID format",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "Access denied - only post author, community owner, or admin can delete posts",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Post not found",
+                    content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content)
+    })
+    public ResponseEntity<Void> deletePost(@PathVariable String postId,
+                                           @RequestParam String requesterId) {
+        logger.info("Deleting post with ID: {}, requesterId: {}", postId, requesterId);
+
+        try {
+            var command = DeletePostCommand.of(postId, requesterId);
+            boolean deleted = postCommandService.handle(command);
+
+            if (!deleted) {
+                logger.warn("Failed to delete post with ID: {} - post not found", postId);
+                return ResponseEntity.notFound().build();
+            }
+
+            logger.info("Post deleted successfully with ID: {}", postId);
+            return ResponseEntity.noContent().build();
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Validation error deleting post with ID: {} - {}", postId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error("Unexpected error deleting post with ID: {}", postId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

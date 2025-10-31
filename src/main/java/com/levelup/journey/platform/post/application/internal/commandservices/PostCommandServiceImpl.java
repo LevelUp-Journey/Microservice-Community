@@ -4,6 +4,7 @@ import com.levelup.journey.platform.moderation.domain.model.commands.AnalyzeCont
 import com.levelup.journey.platform.moderation.domain.services.ReportCommandService;
 import com.levelup.journey.platform.post.domain.model.aggregates.Post;
 import com.levelup.journey.platform.post.domain.model.commands.AddCommentCommand;
+import com.levelup.journey.platform.post.domain.model.commands.DeletePostCommand;
 import com.levelup.journey.platform.post.domain.model.commands.PublishPostCommand;
 import com.levelup.journey.platform.post.domain.model.queries.GetCommunityByIdQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetCommentsByPostIdQuery;
@@ -227,6 +228,78 @@ public class PostCommandServiceImpl implements PostCommandService {
             logger.error("Unexpected error processing AddCommentCommand on post: {}",
                         command.postId(), e);
             return Optional.empty(); // Return empty for unexpected errors
+        }
+    }
+
+    @Override
+    public boolean handle(DeletePostCommand command) {
+        logger.info("Processing DeletePostCommand for post: {}, requesterId: {}",
+                   command.postId(), command.requesterId());
+
+        try {
+            // Find the post
+            Optional<Post> postOptional = postRepository.findById(command.postId());
+            if (postOptional.isEmpty()) {
+                logger.warn("Post not found for deletion: {}", command.postId());
+                return false;
+            }
+
+            Post post = postOptional.get();
+
+            // Check authorization
+            boolean isAuthorized = false;
+
+            // Check if requester is the post author
+            if (post.authorId().equals(command.requesterId())) {
+                isAuthorized = true;
+                logger.debug("User {} is post author, allowing deletion", command.requesterId());
+            } else {
+                // Check if requester is the community owner
+                var communityQuery = new GetCommunityByIdQuery(post.communityId());
+                var communityOptional = communityQueryService.handle(communityQuery);
+
+                if (communityOptional.isPresent()) {
+                    var community = communityOptional.get();
+                    if (community.ownerId().equals(command.requesterId())) {
+                        isAuthorized = true;
+                        logger.debug("User {} is community owner, allowing deletion", command.requesterId());
+                    }
+                }
+
+                // Check if requester is an admin
+                if (!isAuthorized) {
+                    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                    if (authentication != null && authentication.getAuthorities() != null) {
+                        boolean isAdmin = authentication.getAuthorities().stream()
+                            .anyMatch(authority -> "ADMIN".equals(authority.getAuthority()));
+                        if (isAdmin) {
+                            isAuthorized = true;
+                            logger.debug("User {} is admin, allowing deletion", command.requesterId());
+                        }
+                    }
+                }
+            }
+
+            if (!isAuthorized) {
+                logger.warn("User {} attempted to delete post {} but lacks permission", 
+                           command.requesterId(), command.postId());
+                throw new IllegalArgumentException("No tienes permiso para eliminar este post. Solo el autor, el propietario de la comunidad o un administrador pueden eliminar posts.");
+            }
+
+            // Delete the post
+            postRepository.deleteById(command.postId());
+            logger.info("Post deleted successfully: {}", command.postId());
+
+            return true;
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Authorization error in DeletePostCommand for post: {} - {}",
+                        command.postId(), e.getMessage());
+            throw e; // Re-throw authorization errors
+        } catch (Exception e) {
+            logger.error("Unexpected error processing DeletePostCommand for post: {}",
+                        command.postId(), e);
+            return false; // Return false for unexpected errors
         }
     }
 }

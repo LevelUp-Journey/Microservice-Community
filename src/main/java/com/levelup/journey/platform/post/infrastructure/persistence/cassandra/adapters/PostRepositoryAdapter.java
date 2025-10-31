@@ -49,6 +49,11 @@ public class PostRepositoryAdapter implements PostRepository {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public void deleteById(PostId id) {
+        cassandraRepository.deleteById(id.value());
+    }
+
     /**
      * Find posts by community ID
      * @param communityId the community identifier

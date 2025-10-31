@@ -11,5 +11,6 @@ public interface CommunityRepository {
     Community save(Community community);
     Optional<Community> findById(CommunityId id);
     List<Community> findAll();
+    void deleteById(CommunityId id);
 }
 
