@@ -5,9 +5,7 @@ import com.levelup.journey.platform.moderation.domain.model.events.ReportCreated
 import com.levelup.journey.platform.moderation.domain.model.events.SuspiciousContentDetectedEvent;
 import com.levelup.journey.platform.moderation.domain.model.valueobjects.*;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

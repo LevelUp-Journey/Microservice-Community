@@ -44,6 +44,7 @@ public class ReportEntity {
     private boolean autoDetected;
     
     @CassandraType(type = CassandraType.Name.LIST, typeArguments = CassandraType.Name.TEXT)
+    @Builder.Default
     private List<String> suspiciousWords = new ArrayList<>();
     
     private LocalDateTime createdAt;
