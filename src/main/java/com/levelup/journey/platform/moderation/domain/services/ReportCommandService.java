@@ -1,12 +1,9 @@
 package com.levelup.journey.platform.moderation.domain.services;
 
-import com.levelup.journey.platform.moderation.domain.model.aggregates.ContentReport;
 import com.levelup.journey.platform.moderation.domain.model.commands.AnalyzeContentCommand;
 import com.levelup.journey.platform.moderation.domain.model.commands.CreateReportCommand;
 import com.levelup.journey.platform.moderation.domain.model.valueobjects.ReportId;
 import com.levelup.journey.platform.moderation.domain.model.valueobjects.UserId;
-
-import java.util.Optional;
 
 /**
  * Command service for Report operations

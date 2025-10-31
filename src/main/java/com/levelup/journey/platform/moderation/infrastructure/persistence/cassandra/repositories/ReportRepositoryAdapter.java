@@ -10,7 +10,6 @@ import com.levelup.journey.platform.moderation.infrastructure.persistence.cassan
 import com.levelup.journey.platform.moderation.infrastructure.persistence.cassandra.entities.ReportEntity;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;

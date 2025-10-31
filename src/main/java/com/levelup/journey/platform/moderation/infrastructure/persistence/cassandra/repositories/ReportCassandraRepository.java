@@ -3,7 +3,6 @@ package com.levelup.journey.platform.moderation.infrastructure.persistence.cassa
 import com.levelup.journey.platform.moderation.infrastructure.persistence.cassandra.entities.ReportEntity;
 import org.springframework.data.cassandra.repository.CassandraRepository;
 import org.springframework.data.cassandra.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -51,13 +52,16 @@ public class SubscriptionController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('STUDENT') or hasAuthority('TEACHER')")
     @Operation(summary = "Create a new subscription",
-               description = "Subscribe a user to a community")
+               description = "Subscribe a user to a community. Both students and teachers can subscribe to communities.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Subscription created successfully",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = SubscriptionResource.class))),
             @ApiResponse(responseCode = "400", description = "Invalid input data or already subscribed",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "Access denied - only students and teachers can subscribe",
                     content = @Content),
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
@@ -154,9 +158,11 @@ public class SubscriptionController {
     }
 
     @DeleteMapping("/{subscriptionId}")
-    @Operation(summary = "Delete a subscription", description = "Unsubscribe from a community")
+    @PreAuthorize("hasAuthority('STUDENT') or hasAuthority('TEACHER')")
+    @Operation(summary = "Delete a subscription", description = "Unsubscribe from a community. Both students and teachers can unsubscribe.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Subscription deleted successfully"),
+            @ApiResponse(responseCode = "403", description = "Access denied - only students and teachers can unsubscribe"),
             @ApiResponse(responseCode = "404", description = "Subscription not found")
     })
     public ResponseEntity<Void> deleteSubscription(@PathVariable String subscriptionId) {
