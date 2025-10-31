@@ -51,6 +51,26 @@ public class CommentRepositoryAdapter implements CommentRepository {
     }
 
     @Override
+    public boolean deleteByIdAndPostId(CommentId commentId, PostId postId) {
+        Optional<CommentEntity> entityOptional = cassandraRepository.findByPostId(postId.value()).stream()
+                .filter(entity -> entity.getCommentId().equals(commentId.value()))
+                .findFirst();
+
+        if (entityOptional.isPresent()) {
+            cassandraRepository.delete(entityOptional.get());
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public Comment update(Comment comment, PostId postId) {
+        CommentEntity entity = toEntity(comment, postId);
+        cassandraRepository.save(entity);
+        return comment;
+    }
+
+    @Override
     public void deleteByPostId(PostId postId) {
         cassandraRepository.deleteByPostId(postId.value());
     }
