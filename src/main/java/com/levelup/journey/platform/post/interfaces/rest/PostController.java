@@ -13,6 +13,11 @@ import com.levelup.journey.platform.post.interfaces.rest.resources.PostResource;
 import com.levelup.journey.platform.post.interfaces.rest.transform.AddCommentCommandFromResourceAssembler;
 import com.levelup.journey.platform.post.interfaces.rest.transform.CreatePostCommandFromResourceAssembler;
 import com.levelup.journey.platform.post.interfaces.rest.transform.PostResourceFromEntityAssembler;
+import com.levelup.journey.platform.social.domain.services.FollowQueryService;
+import com.levelup.journey.platform.social.domain.services.SubscriptionQueryService;
+import com.levelup.journey.platform.social.domain.model.queries.GetFollowingByUserIdQuery;
+import com.levelup.journey.platform.social.domain.model.queries.GetSubscriptionsByUserIdQuery;
+import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -43,11 +48,17 @@ public class PostController {
 
     private final PostCommandService postCommandService;
     private final PostQueryService postQueryService;
+    private final FollowQueryService followQueryService;
+    private final SubscriptionQueryService subscriptionQueryService;
 
     public PostController(PostCommandService postCommandService,
-                         PostQueryService postQueryService) {
+                         PostQueryService postQueryService,
+                         FollowQueryService followQueryService,
+                         SubscriptionQueryService subscriptionQueryService) {
         this.postCommandService = postCommandService;
         this.postQueryService = postQueryService;
+        this.followQueryService = followQueryService;
+        this.subscriptionQueryService = subscriptionQueryService;
     }
 
     /**
@@ -228,17 +239,29 @@ public class PostController {
                 return ResponseEntity.badRequest().build();
             }
 
-            // Get feed sources from Social BC (this would need to be implemented)
-            // For now, get all posts and filter by user's followed users and subscribed communities
+            // Get user's followed users
+            var followingQuery = new GetFollowingByUserIdQuery(UserId.of(userId));
+            var followingRelationships = followQueryService.handle(followingQuery);
+            var followedUserIds = followingRelationships.stream()
+                    .map(follow -> follow.followingId().value())
+                    .collect(Collectors.toSet());
+
+            // Get user's subscribed communities
+            var subscriptionsQuery = new GetSubscriptionsByUserIdQuery(UserId.of(userId));
+            var subscriptions = subscriptionQueryService.handle(subscriptionsQuery);
+            var subscribedCommunityIds = subscriptions.stream()
+                    .map(subscription -> subscription.communityId().value())
+                    .collect(Collectors.toSet());
+
+            // Get all posts and filter by feed sources
             var query = new GetAllPostsQuery();
             var allPosts = postQueryService.handle(query);
 
-            // TODO: Filter posts by user's feed sources (followed users + subscribed communities)
-            // This would require integration with Social BC or passing user context
-
-            // For now, return all posts sorted by date (most recent first)
+            // Filter posts: include posts from followed users OR from subscribed communities
             var feedPosts = allPosts.stream()
-                    .sorted((p1, p2) -> p2.createdAt().compareTo(p1.createdAt()))
+                    .filter(post -> followedUserIds.contains(post.authorId().value()) ||
+                                   subscribedCommunityIds.contains(post.communityId().value()))
+                    .sorted((p1, p2) -> p2.createdAt().compareTo(p1.createdAt())) // Most recent first
                     .skip(offset)
                     .limit(limit)
                     .map(PostResourceFromEntityAssembler::toResourceFromEntity)
