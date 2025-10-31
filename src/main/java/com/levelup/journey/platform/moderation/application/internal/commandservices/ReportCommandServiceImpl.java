@@ -167,7 +167,7 @@ public class ReportCommandServiceImpl implements ReportCommandService {
     }
 
     private void publishDomainEvents(ContentReport report) {
-        List<com.levelup.journey.platform.moderation.domain.model.events.DomainEvent> events = report.pullDomainEvents();
+        List<com.levelup.journey.platform.shared.domain.DomainEvent> events = report.pullDomainEvents();
         
         for (var event : events) {
             try {
