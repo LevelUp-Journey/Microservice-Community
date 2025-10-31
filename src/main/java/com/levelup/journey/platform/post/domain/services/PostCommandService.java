@@ -2,6 +2,7 @@ package com.levelup.journey.platform.post.domain.services;
 
 import com.levelup.journey.platform.post.domain.model.aggregates.Post;
 import com.levelup.journey.platform.post.domain.model.commands.AddCommentCommand;
+import com.levelup.journey.platform.post.domain.model.commands.DeletePostCommand;
 import com.levelup.journey.platform.post.domain.model.commands.PublishPostCommand;
 
 import java.util.Optional;
@@ -25,4 +26,11 @@ public interface PostCommandService {
      * @return the updated post with the new comment
      */
     Optional<Post> handle(AddCommentCommand command);
+
+    /**
+     * Handles the command to delete a post
+     * @param command the delete post command
+     * @return true if the post was deleted successfully, false otherwise
+     */
+    boolean handle(DeletePostCommand command);
 }
