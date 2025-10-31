@@ -4,6 +4,7 @@ import com.levelup.journey.platform.moderation.domain.model.entities.ReportActio
 import com.levelup.journey.platform.moderation.domain.model.events.ReportCreatedEvent;
 import com.levelup.journey.platform.moderation.domain.model.events.SuspiciousContentDetectedEvent;
 import com.levelup.journey.platform.moderation.domain.model.valueobjects.*;
+import com.levelup.journey.platform.shared.domain.AggregateRoot;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;

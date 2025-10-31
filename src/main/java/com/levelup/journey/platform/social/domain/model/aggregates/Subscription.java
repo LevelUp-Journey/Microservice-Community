@@ -4,6 +4,7 @@ import com.levelup.journey.platform.social.domain.model.events.SubscriptionCreat
 import com.levelup.journey.platform.social.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.social.domain.model.valueobjects.SubscriptionId;
 import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
+import com.levelup.journey.platform.shared.domain.AggregateRoot;
 
 import java.time.Instant;
 import java.util.Objects;

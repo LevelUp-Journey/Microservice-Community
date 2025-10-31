@@ -1,24 +1,25 @@
 package com.levelup.journey.platform.post.interfaces.rest;
 
+import com.levelup.journey.platform.post.domain.model.commands.DeleteCommentCommand;
 import com.levelup.journey.platform.post.domain.model.commands.DeletePostCommand;
 import com.levelup.journey.platform.post.domain.model.queries.GetAllPostsQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetPostByIdQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetPostsByCommunityIdQuery;
+import com.levelup.journey.platform.post.domain.model.valueobjects.CommentId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
 import com.levelup.journey.platform.post.domain.services.PostCommandService;
 import com.levelup.journey.platform.post.domain.services.PostQueryService;
 import com.levelup.journey.platform.post.interfaces.rest.resources.AddCommentResource;
+import com.levelup.journey.platform.post.interfaces.rest.resources.EditCommentResource;
 import com.levelup.journey.platform.post.interfaces.rest.resources.CreatePostResource;
 import com.levelup.journey.platform.post.interfaces.rest.resources.PostResource;
 import com.levelup.journey.platform.post.interfaces.rest.transform.AddCommentCommandFromResourceAssembler;
+import com.levelup.journey.platform.post.interfaces.rest.transform.EditCommentCommandFromResourceAssembler;
 import com.levelup.journey.platform.post.interfaces.rest.transform.CreatePostCommandFromResourceAssembler;
 import com.levelup.journey.platform.post.interfaces.rest.transform.PostResourceFromEntityAssembler;
-import com.levelup.journey.platform.social.domain.services.FollowQueryService;
-import com.levelup.journey.platform.social.domain.services.SubscriptionQueryService;
-import com.levelup.journey.platform.social.domain.model.queries.GetFollowingByUserIdQuery;
-import com.levelup.journey.platform.social.domain.model.queries.GetSubscriptionsByUserIdQuery;
-import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
+import com.levelup.journey.platform.shared.domain.acl.SocialRelationshipService;
+import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -49,17 +50,14 @@ public class PostController {
 
     private final PostCommandService postCommandService;
     private final PostQueryService postQueryService;
-    private final FollowQueryService followQueryService;
-    private final SubscriptionQueryService subscriptionQueryService;
+    private final SocialRelationshipService socialRelationshipService;
 
     public PostController(PostCommandService postCommandService,
                          PostQueryService postQueryService,
-                         FollowQueryService followQueryService,
-                         SubscriptionQueryService subscriptionQueryService) {
+                         SocialRelationshipService socialRelationshipService) {
         this.postCommandService = postCommandService;
         this.postQueryService = postQueryService;
-        this.followQueryService = followQueryService;
-        this.subscriptionQueryService = subscriptionQueryService;
+        this.socialRelationshipService = socialRelationshipService;
     }
 
     /**
@@ -241,18 +239,10 @@ public class PostController {
             }
 
             // Get user's followed users
-            var followingQuery = new GetFollowingByUserIdQuery(UserId.of(userId));
-            var followingRelationships = followQueryService.handle(followingQuery);
-            var followedUserIds = followingRelationships.stream()
-                    .map(follow -> follow.followingId().value())
-                    .collect(Collectors.toSet());
+            var followedUserIds = socialRelationshipService.getFollowing(userId);
 
             // Get user's subscribed communities
-            var subscriptionsQuery = new GetSubscriptionsByUserIdQuery(UserId.of(userId));
-            var subscriptions = subscriptionQueryService.handle(subscriptionsQuery);
-            var subscribedCommunityIds = subscriptions.stream()
-                    .map(subscription -> subscription.communityId().value())
-                    .collect(Collectors.toSet());
+            var subscribedCommunityIds = socialRelationshipService.getSubscribedCommunities(userId);
 
             // Get all posts and filter by feed sources
             var query = new GetAllPostsQuery();
@@ -319,6 +309,102 @@ public class PostController {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             logger.error("Unexpected error adding comment to post: {}", postId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Edit a comment
+     */
+    @PutMapping("/{postId}/comments/{commentId}")
+    @Operation(summary = "Edit comment", description = "Edit a comment's content. Only the comment author can edit their comments.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Comment edited successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PostResource.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input data or comment not found",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "Access denied - only comment author can edit comments",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Post or comment not found",
+                    content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content)
+    })
+    public ResponseEntity<PostResource> editComment(@PathVariable String postId,
+                                                    @PathVariable String commentId,
+                                                    @RequestParam String requesterId,
+                                                    @Valid @RequestBody EditCommentResource resource) {
+        logger.info("Editing comment: {} on post: {}, requesterId: {}",
+                   commentId, postId, requesterId);
+
+        try {
+            var command = EditCommentCommandFromResourceAssembler.toCommandFromResource(postId, commentId, requesterId, resource);
+            var post = postCommandService.handle(command);
+
+            if (post.isEmpty()) {
+                logger.warn("Failed to edit comment: {} on post: {} - comment not found or access denied",
+                           commentId, postId);
+                return ResponseEntity.notFound().build();
+            }
+
+            var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
+            logger.info("Comment edited successfully: {} on post: {}", commentId, postId);
+            return ResponseEntity.ok(postResource);
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Validation error editing comment: {} on post: {} - {}",
+                        commentId, postId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error("Unexpected error editing comment: {} on post: {}", commentId, postId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Delete a comment
+     */
+    @DeleteMapping("/{postId}/comments/{commentId}")
+    @Operation(summary = "Delete comment", description = "Delete a comment. Only the comment author, post author, or admin can delete comments.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Comment deleted successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PostResource.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid comment ID format",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "Access denied - insufficient permissions to delete comment",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Post or comment not found",
+                    content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content)
+    })
+    public ResponseEntity<PostResource> deleteComment(@PathVariable String postId,
+                                                      @PathVariable String commentId,
+                                                      @RequestParam String requesterId) {
+        logger.info("Deleting comment: {} from post: {}, requesterId: {}", commentId, postId, requesterId);
+
+        try {
+            var command = new DeleteCommentCommand(PostId.of(postId), CommentId.of(commentId), UserId.of(requesterId));
+            var post = postCommandService.handle(command);
+
+            if (post.isEmpty()) {
+                logger.warn("Failed to delete comment: {} from post: {} - comment not found or access denied",
+                           commentId, postId);
+                return ResponseEntity.notFound().build();
+            }
+
+            var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
+            logger.info("Comment deleted successfully: {} from post: {}", commentId, postId);
+            return ResponseEntity.ok(postResource);
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Validation error deleting comment: {} from post: {} - {}",
+                        commentId, postId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error("Unexpected error deleting comment: {} from post: {}", commentId, postId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

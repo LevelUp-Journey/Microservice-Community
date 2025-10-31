@@ -37,6 +37,22 @@ public interface CommentRepository {
     Optional<Comment> findByIdAndPostId(CommentId commentId, PostId postId);
 
     /**
+     * Delete a comment by its ID and post ID
+     * @param commentId the comment identifier
+     * @param postId the post identifier
+     * @return true if the comment was deleted, false if not found
+     */
+    boolean deleteByIdAndPostId(CommentId commentId, PostId postId);
+
+    /**
+     * Update a comment
+     * @param comment the updated comment
+     * @param postId the post ID this comment belongs to
+     * @return the updated comment
+     */
+    Comment update(Comment comment, PostId postId);
+
+    /**
      * Delete all comments for a specific post
      * @param postId the post identifier
      */

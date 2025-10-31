@@ -1,5 +1,7 @@
 package com.levelup.journey.platform.moderation.domain.model.events;
 
+import com.levelup.journey.platform.shared.domain.DomainEvent;
+
 import java.time.Instant;
 import java.util.List;
 
