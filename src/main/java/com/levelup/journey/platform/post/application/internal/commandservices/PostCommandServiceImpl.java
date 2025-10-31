@@ -2,7 +2,6 @@ package com.levelup.journey.platform.post.application.internal.commandservices;
 
 import com.levelup.journey.platform.post.domain.model.aggregates.Post;
 import com.levelup.journey.platform.post.domain.model.commands.*;
-import com.levelup.journey.platform.post.domain.model.entities.Comment;
 import com.levelup.journey.platform.post.domain.model.queries.GetCommentsByPostIdQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetCommunityByIdQuery;
 import com.levelup.journey.platform.post.domain.model.repositories.PostRepository;
@@ -16,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Optional;
 import java.util.UUID;
