@@ -9,15 +9,20 @@ import com.levelup.journey.platform.post.domain.model.queries.GetCommunityByIdQu
 import com.levelup.journey.platform.post.domain.model.queries.GetCommentsByPostIdQuery;
 import com.levelup.journey.platform.post.domain.model.repositories.PostRepository;
 import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
+import com.levelup.journey.platform.post.domain.services.PostCommandService;
+import com.levelup.journey.platform.post.domain.services.CommunityQueryService;
 import com.levelup.journey.platform.post.domain.services.CommentCommandService;
 import com.levelup.journey.platform.post.domain.services.CommentQueryService;
-import com.levelup.journey.platform.post.domain.services.CommunityQueryService;
-import com.levelup.journey.platform.post.domain.services.PostCommandService;
+import com.levelup.journey.platform.social.domain.services.SubscriptionQueryService;
+import com.levelup.journey.platform.social.domain.model.queries.GetSubscriptionsByUserIdQuery;
+import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -36,6 +41,7 @@ public class PostCommandServiceImpl implements PostCommandService {
     private final CommunityQueryService communityQueryService;
     private final CommentCommandService commentCommandService;
     private final CommentQueryService commentQueryService;
+    private final SubscriptionQueryService subscriptionQueryService;
     
     @Autowired(required = false)
     private ReportCommandService reportCommandService;
@@ -43,11 +49,13 @@ public class PostCommandServiceImpl implements PostCommandService {
     public PostCommandServiceImpl(PostRepository postRepository,
                                   CommunityQueryService communityQueryService,
                                   CommentCommandService commentCommandService,
-                                  CommentQueryService commentQueryService) {
+                                  CommentQueryService commentQueryService,
+                                  SubscriptionQueryService subscriptionQueryService) {
         this.postRepository = postRepository;
         this.communityQueryService = communityQueryService;
         this.commentCommandService = commentCommandService;
         this.commentQueryService = commentQueryService;
+        this.subscriptionQueryService = subscriptionQueryService;
     }
 
     @Override
@@ -65,6 +73,47 @@ public class PostCommandServiceImpl implements PostCommandService {
             if (communityOptional.isEmpty()) {
                 logger.warn("Attempted to create post for non-existent community ID: {}", command.communityId());
                 throw new IllegalArgumentException("La comunidad con ID: " + command.communityId() + " no existe");
+            }
+
+            var community = communityOptional.get();
+
+            // Check posting permissions
+            boolean canPost = false;
+
+            // Check if user is the community owner
+            if (community.ownerId().equals(command.authorId())) {
+                canPost = true;
+                logger.debug("User {} is community owner, allowing post creation", command.authorId());
+            } else {
+                // Check if user is a teacher who is subscribed to the community
+                Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+                if (authentication != null && authentication.getAuthorities() != null) {
+                    boolean isTeacher = authentication.getAuthorities().stream()
+                        .anyMatch(authority -> "TEACHER".equals(authority.getAuthority()));
+
+                    if (isTeacher) {
+                        // Check if teacher is subscribed to this community
+                        var subscriptions = subscriptionQueryService.handle(
+                            new GetSubscriptionsByUserIdQuery(UserId.of(command.authorId().value())));
+                        boolean isSubscribed = subscriptions.stream()
+                            .anyMatch(sub -> sub.communityId().equals(command.communityId()));
+
+                        if (isSubscribed) {
+                            canPost = true;
+                            logger.debug("User {} is subscribed teacher, allowing post creation", command.authorId());
+                        } else {
+                            logger.warn("Teacher {} attempted to post in community {} but is not subscribed",
+                                command.authorId(), command.communityId());
+                        }
+                    } else {
+                        logger.warn("User {} attempted to post in community {} but lacks permission (not owner or subscribed teacher)",
+                            command.authorId(), command.communityId());
+                    }
+                }
+            }
+
+            if (!canPost) {
+                throw new IllegalArgumentException("No tienes permiso para publicar en esta comunidad. Solo el propietario o profesores suscritos pueden publicar.");
             }
 
             // Check if post with this ID already exists (very unlikely with UUID)

@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -55,13 +54,14 @@ public class PostController {
      * Create a new post
      */
     @PostMapping
-    @PreAuthorize("hasAuthority('ADMIN') or hasAuthority('TEACHER')")
-    @Operation(summary = "Create a new post", description = "Publish a new post in a community. Requires ADMIN or TEACHER role.")
+    @Operation(summary = "Create a new post", description = "Publish a new post in a community. Only community owners and subscribed teachers can post.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Post created successfully",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = PostResource.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input data or post already exists",
+            @ApiResponse(responseCode = "400", description = "Invalid input data or insufficient permissions",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "Access denied - only community owners and subscribed teachers can post",
                     content = @Content),
             @ApiResponse(responseCode = "409", description = "Post with this ID already exists",
                     content = @Content),
