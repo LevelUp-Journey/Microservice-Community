@@ -3,6 +3,7 @@ package com.levelup.journey.platform.social.domain.model.aggregates;
 import com.levelup.journey.platform.social.domain.model.events.FollowCreated;
 import com.levelup.journey.platform.social.domain.model.valueobjects.FollowId;
 import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
+import com.levelup.journey.platform.shared.domain.AggregateRoot;
 
 import java.time.Instant;
 import java.util.Objects;

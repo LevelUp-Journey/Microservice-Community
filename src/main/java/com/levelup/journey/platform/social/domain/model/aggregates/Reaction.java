@@ -5,6 +5,7 @@ import com.levelup.journey.platform.social.domain.model.valueobjects.PostId;
 import com.levelup.journey.platform.social.domain.model.valueobjects.ReactionId;
 import com.levelup.journey.platform.social.domain.model.valueobjects.ReactionType;
 import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
+import com.levelup.journey.platform.shared.domain.AggregateRoot;
 
 import java.time.Instant;
 import java.util.Objects;
