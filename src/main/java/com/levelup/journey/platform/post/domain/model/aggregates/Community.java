@@ -5,6 +5,7 @@ import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.ProfileId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
+import com.levelup.journey.platform.shared.domain.AggregateRoot;
 
 import java.time.Instant;
 import java.util.Objects;
