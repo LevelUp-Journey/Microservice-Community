@@ -2,6 +2,7 @@ package com.levelup.journey.platform.post.interfaces.rest;
 
 import com.levelup.journey.platform.post.domain.model.queries.GetAllCommunitiesQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetCommunityByIdQuery;
+import com.levelup.journey.platform.post.domain.model.commands.DeleteCommunityCommand;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.services.CommunityCommandService;
 import com.levelup.journey.platform.post.domain.services.CommunityQueryService;
@@ -136,6 +137,49 @@ public class CommunityController {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             logger.error("Unexpected error updating community with ID: {}", communityId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Delete a community
+     */
+    @DeleteMapping("/{communityId}")
+    @PreAuthorize("hasAuthority('TEACHER') or hasAuthority('ADMIN')")
+    @Operation(summary = "Delete community", description = "Delete a community. Only the community owner or admin can delete communities.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Community deleted successfully",
+                    content = @Content),
+            @ApiResponse(responseCode = "400", description = "Invalid community ID format",
+                    content = @Content),
+            @ApiResponse(responseCode = "403", description = "Access denied - only community owner or admin can delete communities",
+                    content = @Content),
+            @ApiResponse(responseCode = "404", description = "Community not found",
+                    content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content)
+    })
+    public ResponseEntity<Void> deleteCommunity(@PathVariable String communityId,
+                                                @RequestParam String requesterId) {
+        logger.info("Deleting community with ID: {}, requesterId: {}", communityId, requesterId);
+
+        try {
+            var command = DeleteCommunityCommand.of(communityId, requesterId);
+            boolean deleted = communityCommandService.handle(command);
+
+            if (!deleted) {
+                logger.warn("Failed to delete community with ID: {} - community not found", communityId);
+                return ResponseEntity.notFound().build();
+            }
+
+            logger.info("Community deleted successfully with ID: {}", communityId);
+            return ResponseEntity.noContent().build();
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Validation error deleting community with ID: {} - {}", communityId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error("Unexpected error deleting community with ID: {}", communityId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
