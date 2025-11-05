@@ -9,8 +9,8 @@ spring:
     keyspace-name: ${CASSANDRA_KEYSPACE:community_keyspace}
     local-datacenter: ${CASSANDRA_DATACENTER:datacenter1}
     schema-action: create_if_not_exists
-    password: ${CASSANDRA_PASSWORD}
     username: ${CASSANDRA_USERNAME}
+    password: ${CASSANDRA_PASSWORD}
 
   # --- Configuración de Kafka (Azure Event Hubs) ---
   kafka:
