@@ -1,20 +1,58 @@
 spring:
   application:
     name: community-service
+
+  # --- Configuración de Cassandra ---
   cassandra:
-    contact-points: 127.0.0.1
-    port: 9042
-    keyspace-name: community_keyspace
-    local-datacenter: datacenter1
+    contact-points: ${CASSANDRA_CONTACT_POINTS:127.0.0.1}
+    port: ${CASSANDRA_PORT:9042}
+    keyspace-name: ${CASSANDRA_KEYSPACE:community_keyspace}
+    local-datacenter: ${CASSANDRA_DATACENTER:datacenter1}
     schema-action: create_if_not_exists
+
+  # --- Configuración de Kafka (Azure Event Hubs) ---
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString" password="${KAFKA_CONNECTION_STRING}";'
+
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      group-id: ${spring.application.name}
+      auto-offset-reset: earliest
+      properties:
+        spring:
+          json:
+            trusted:
+              packages: "*"
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        max.block.ms: 2000
+        request.timeout.ms: 2000
+        delivery.timeout.ms: 3000
+        spring:
+          json:
+            add:
+              type:
+                headers: false
+
+    admin:
+      auto-create: false
+      fail-fast: false
 
 # Server Configuration
 server:
-  port: 8086
+  port: ${PORT:8086}
 
 # JWT Configuration
 jwt:
-  secret: d3ee61e796a04895924719559f19a19de2e31d4c330208d8c410c2d63c89de9b5aadc298404a843d521569e812c599bda47b65d4c7fce5a8ded21f24d8df59dc
+  secret: ${JWT_SECRET}
   expiration: 86400000
 
 # OpenAPI Documentation
@@ -33,7 +71,14 @@ springdoc:
     operations-sorter: alpha
     tags-sorter: alpha
 
+# Kafka Topics Configuration
+kafka:
+  topics:
+    challenge-completed: challenge.completed
+    post-created: post.created
+    comment-created: comment.created
 
+# Configuration for Service Discovery
 eureka:
   client:
     service-url:
@@ -41,13 +86,20 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
   instance:
-    ip-address: ${SERVER_IP}
-    prefer-ip-address: true
-
-    status-page-url: http://${eureka.instance.ip-address}:8081/swagger-ui/index.html
-    health-check-url: http://${eureka.instance.ip-address}:8081/actuator/health
-
-    instance-id: ${spring.application.name}:${server.port:8081}
-
+    prefer-ip-address: false
+    hostname: ${HOSTNAME:${spring.application.name}}
+    status-page-url: http://${eureka.instance.hostname}:${server.port:8086}/swagger-ui/index.html
+    health-check-url: http://${eureka.instance.hostname}:${server.port:8086}/actuator/health
+    instance-id: ${spring.application.name}:${server.port:8086}
     lease-renewal-interval-in-seconds: 30
     lease-expiration-duration-in-seconds: 90
+
+# --- Configuración de Actuator ---
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
