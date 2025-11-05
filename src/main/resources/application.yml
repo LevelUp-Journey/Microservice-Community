@@ -4,11 +4,13 @@ spring:
 
   # --- Configuración de Cassandra ---
   cassandra:
-    contact-points: ${CASSANDRA_CONTACT_POINTS:127.0.0.1}
-    port: ${CASSANDRA_PORT:9042}
+    contact-points: ${CASSANDRA_CONTACT_POINTS}
+    port: ${CASSANDRA_PORT}
     keyspace-name: ${CASSANDRA_KEYSPACE:community_keyspace}
     local-datacenter: ${CASSANDRA_DATACENTER:datacenter1}
     schema-action: create_if_not_exists
+    password: ${CASSANDRA_PASSWORD}
+    username: ${CASSANDRA_USERNAME}
 
   # --- Configuración de Kafka (Azure Event Hubs) ---
   kafka:
