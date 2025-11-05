@@ -1,6 +1,6 @@
 spring:
   application:
-    name: COMMUNITY_SERVICE
+    name: community-service
   cassandra:
     contact-points: 127.0.0.1
     port: 9042
@@ -38,5 +38,16 @@ eureka:
   client:
     service-url:
       defaultZone: ${SERVICE_DISCOVERY_URL}
+    register-with-eureka: true
+    fetch-registry: true
   instance:
+    ip-address: ${SERVER_IP}
     prefer-ip-address: true
+
+    status-page-url: http://${eureka.instance.ip-address}:8081/swagger-ui/index.html
+    health-check-url: http://${eureka.instance.ip-address}:8081/actuator/health
+
+    instance-id: ${spring.application.name}:${server.port:8081}
+
+    lease-renewal-interval-in-seconds: 30
+    lease-expiration-duration-in-seconds: 90
