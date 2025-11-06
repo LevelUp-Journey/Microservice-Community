@@ -1,107 +1,107 @@
 spring:
-  application:
-    name: community-service
+    application:
+        name: community-service
 
-  # --- Configuración de Cassandra ---
-  cassandra:
-    contact-points: ${CASSANDRA_CONTACT_POINTS}
-    port: ${CASSANDRA_PORT}
-    keyspace-name: ${CASSANDRA_KEYSPACE:community_keyspace}
-    local-datacenter: ${CASSANDRA_DATACENTER:datacenter1}
-    schema-action: create_if_not_exists
-    username: ${CASSANDRA_USERNAME}
-    password: ${CASSANDRA_PASSWORD}
+    # --- Configuración de Cassandra ---
+    cassandra:
+        contact-points: ${CASSANDRA_CONTACT_POINTS}
+        port: ${CASSANDRA_PORT}
+        keyspace-name: ${CASSANDRA_KEYSPACE:community_keyspace}
+        local-datacenter: ${CASSANDRA_DATACENTER:datacenter1}
+        schema-action: create_if_not_exists
+        username: ${CASSANDRA_USERNAME}
+        password: ${CASSANDRA_PASSWORD}
 
-  # --- Configuración de Kafka (Azure Event Hubs) ---
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
-    properties:
-      security.protocol: SASL_SSL
-      sasl.mechanism: PLAIN
-      sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString" password="${KAFKA_CONNECTION_STRING}";'
+    # --- Configuración de Kafka (Azure Event Hubs) ---
+    kafka:
+        bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+        properties:
+            security.protocol: SASL_SSL
+            sasl.mechanism: PLAIN
+            sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString" password="${KAFKA_CONNECTION_STRING}";'
 
-    consumer:
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      group-id: ${spring.application.name}
-      auto-offset-reset: earliest
-      properties:
-        spring:
-          json:
-            trusted:
-              packages: "*"
+        consumer:
+            key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+            value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+            group-id: ${spring.application.name}
+            auto-offset-reset: earliest
+            properties:
+                spring:
+                    json:
+                        trusted:
+                            packages: "*"
 
-    producer:
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        max.block.ms: 2000
-        request.timeout.ms: 2000
-        delivery.timeout.ms: 3000
-        spring:
-          json:
-            add:
-              type:
-                headers: false
+        producer:
+            key-serializer: org.apache.kafka.common.serialization.StringSerializer
+            value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+            properties:
+                max.block.ms: 2000
+                request.timeout.ms: 2000
+                delivery.timeout.ms: 3000
+                spring:
+                    json:
+                        add:
+                            type:
+                                headers: false
 
-    admin:
-      auto-create: false
-      fail-fast: false
+        admin:
+            auto-create: false
+            fail-fast: false
 
 # Server Configuration
 server:
-  port: ${PORT:8086}
+    port: ${PORT:8086}
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET}
-  expiration: 86400000
+    secret: ${JWT_SECRET}
+    expiration: 86400000
 
 # OpenAPI Documentation
 documentation:
-  application:
-    description: Community Microservice API
-    version: 1.0.0
+    application:
+        description: Community Microservice API
+        version: 1.0.0
 
 # SpringDoc OpenAPI Configuration
 springdoc:
-  api-docs:
-    path: /api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    enabled: true
-    operations-sorter: alpha
-    tags-sorter: alpha
+    api-docs:
+        path: /api-docs
+    swagger-ui:
+        path: /swagger-ui.html
+        enabled: true
+        operations-sorter: alpha
+        tags-sorter: alpha
 
 # Kafka Topics Configuration
 kafka:
-  topics:
-    challenge-completed: challenge.completed
-    post-created: post.created
-    comment-created: comment.created
+    topics:
+        challenge-completed: challenge.completed
+        post-created: post.created
+        comment-created: comment.created
 
 # Configuration for Service Discovery
 eureka:
-  client:
-    service-url:
-      defaultZone: ${SERVICE_DISCOVERY_URL}
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    prefer-ip-address: false
-    hostname: ${HOSTNAME:${spring.application.name}}
-    status-page-url: http://${eureka.instance.hostname}:${server.port:8086}/swagger-ui/index.html
-    health-check-url: http://${eureka.instance.hostname}:${server.port:8086}/actuator/health
-    instance-id: ${spring.application.name}:${server.port:8086}
-    lease-renewal-interval-in-seconds: 30
-    lease-expiration-duration-in-seconds: 90
+    client:
+        service-url:
+            defaultZone: ${SERVICE_DISCOVERY_URL}
+        register-with-eureka: true
+        fetch-registry: true
+    instance:
+        prefer-ip-address: true
+        # hostname: ${HOSTNAME:${spring.application.name}}
+        # status-page-url: http://${eureka.instance.hostname}:${server.port:8086}/swagger-ui/index.html
+        # health-check-url: http://${eureka.instance.hostname}:${server.port:8086}/actuator/health
+        # instance-id: ${spring.application.name}:${server.port:8086}
+        lease-renewal-interval-in-seconds: 30
+        lease-expiration-duration-in-seconds: 90
 
 # --- Configuración de Actuator ---
 management:
-  endpoints:
-    web:
-      exposure:
-        include: health,info
-  endpoint:
-    health:
-      show-details: always
+    endpoints:
+        web:
+            exposure:
+                include: health,info
+    endpoint:
+        health:
+            show-details: always
