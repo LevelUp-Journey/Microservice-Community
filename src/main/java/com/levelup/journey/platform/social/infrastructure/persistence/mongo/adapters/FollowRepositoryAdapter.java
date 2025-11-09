@@ -1,11 +1,12 @@
-package com.levelup.journey.platform.social.infrastructure.persistence.cassandra.adapters;
+package com.levelup.journey.platform.social.infrastructure.persistence.mongo.adapters;
 
 import com.levelup.journey.platform.social.domain.model.aggregates.Follow;
 import com.levelup.journey.platform.social.domain.model.repositories.FollowRepository;
 import com.levelup.journey.platform.social.domain.model.valueobjects.FollowId;
 import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
-import com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities.FollowEntity;
-import com.levelup.journey.platform.social.infrastructure.persistence.cassandra.repositories.FollowCassandraRepository;
+import com.levelup.journey.platform.social.infrastructure.persistence.mongo.entities.FollowEntity;
+import com.levelup.journey.platform.social.infrastructure.persistence.mongo.repositories.FollowCassandraRepository;
+
 import org.springframework.stereotype.Component;
 
 import java.util.List;

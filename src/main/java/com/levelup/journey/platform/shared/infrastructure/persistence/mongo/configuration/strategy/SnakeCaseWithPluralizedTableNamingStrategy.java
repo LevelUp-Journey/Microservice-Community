@@ -1,4 +1,4 @@
-package com.levelup.journey.platform.shared.infrastructure.persistence.cassandra.configuration.strategy;
+package com.levelup.journey.platform.shared.infrastructure.persistence.mongo.configuration.strategy;
 
 import org.springframework.data.cassandra.core.mapping.CassandraPersistentEntity;
 import org.springframework.data.cassandra.core.mapping.CassandraPersistentProperty;

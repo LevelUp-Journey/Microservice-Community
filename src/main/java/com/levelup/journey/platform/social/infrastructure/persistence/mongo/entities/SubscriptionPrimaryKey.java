@@ -1,4 +1,4 @@
-package com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities;
+package com.levelup.journey.platform.social.infrastructure.persistence.mongo.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

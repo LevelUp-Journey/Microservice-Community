@@ -1,10 +1,11 @@
-package com.levelup.journey.platform.social.infrastructure.persistence.cassandra.repositories;
+package com.levelup.journey.platform.social.infrastructure.persistence.mongo.repositories;
 
-import com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities.SubscriptionEntity;
-import com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities.SubscriptionPrimaryKey;
 import org.springframework.data.cassandra.repository.CassandraRepository;
 import org.springframework.data.cassandra.repository.Query;
 import org.springframework.stereotype.Repository;
+
+import com.levelup.journey.platform.social.infrastructure.persistence.mongo.entities.SubscriptionEntity;
+import com.levelup.journey.platform.social.infrastructure.persistence.mongo.entities.SubscriptionPrimaryKey;
 
 import java.util.List;
 import java.util.Optional;

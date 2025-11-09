@@ -1,4 +1,4 @@
-package com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities;
+package com.levelup.journey.platform.social.infrastructure.persistence.mongo.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,17 +9,18 @@ import org.springframework.data.cassandra.core.mapping.Table;
 import java.time.Instant;
 
 /**
- * Subscription Entity for Cassandra persistence
- * Maps to the subscriptions table
+ * Reaction Entity for Cassandra persistence
+ * Maps to the reactions table
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("subscriptions")
-public class SubscriptionEntity {
+@Table("reactions")
+public class ReactionEntity {
 
     @PrimaryKey
-    private SubscriptionPrimaryKey id;
+    private ReactionPrimaryKey id;
 
+    private String reactionType;
     private Instant createdAt;
 }

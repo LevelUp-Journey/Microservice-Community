@@ -1,4 +1,4 @@
-package com.levelup.journey.platform.moderation.infrastructure.persistence.cassandra.repositories;
+package com.levelup.journey.platform.moderation.infrastructure.persistence.mongo.repositories;
 
 import com.levelup.journey.platform.moderation.domain.model.aggregates.ContentReport;
 import com.levelup.journey.platform.moderation.domain.model.repositories.ReportRepository;
@@ -6,8 +6,8 @@ import com.levelup.journey.platform.moderation.domain.model.valueobjects.PostId;
 import com.levelup.journey.platform.moderation.domain.model.valueobjects.ReportCategory;
 import com.levelup.journey.platform.moderation.domain.model.valueobjects.ReportId;
 import com.levelup.journey.platform.moderation.domain.model.valueobjects.UserId;
-import com.levelup.journey.platform.moderation.infrastructure.persistence.cassandra.entities.ReportActionEntity;
-import com.levelup.journey.platform.moderation.infrastructure.persistence.cassandra.entities.ReportEntity;
+import com.levelup.journey.platform.moderation.infrastructure.persistence.mongo.entities.ReportActionEntity;
+import com.levelup.journey.platform.moderation.infrastructure.persistence.mongo.entities.ReportEntity;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,11 +18,11 @@ import java.util.stream.Collectors;
 @Repository
 public class ReportRepositoryAdapter implements ReportRepository {
 
-    private final ReportCassandraRepository reportRepository;
-    private final ReportActionCassandraRepository reportActionRepository;
+    private final ReportMongoRepository reportRepository;
+    private final ReportActionMongoRepository reportActionRepository;
 
-    public ReportRepositoryAdapter(ReportCassandraRepository reportRepository,
-                                   ReportActionCassandraRepository reportActionRepository) {
+    public ReportRepositoryAdapter(ReportMongoRepository reportRepository,
+                                   ReportActionMongoRepository reportActionRepository) {
         this.reportRepository = reportRepository;
         this.reportActionRepository = reportActionRepository;
     }
@@ -35,8 +35,8 @@ public class ReportRepositoryAdapter implements ReportRepository {
         // Save report actions
         List<ReportActionEntity> actionEntities = contentReport.getActions().stream()
                 .map(action -> ReportActionEntity.builder()
+                        .id(UUID.randomUUID())
                         .reportId(savedEntity.getId())
-                        .actionId(UUID.randomUUID())
                         .actionType(action.getActionType().name())
                         .reason(action.getReason())
                         .performedBy(action.getPerformedBy() != null ? action.getPerformedBy().value() : null)
@@ -63,7 +63,7 @@ public class ReportRepositoryAdapter implements ReportRepository {
 
     @Override
     public List<ContentReport> findByPostId(PostId postId) {
-        List<ReportEntity> entities = reportRepository.findByPostId(UUID.fromString(postId.value().toString()));
+        List<ReportEntity> entities = reportRepository.findByPostId(postId.value());
         return entities.stream()
                 .map(entity -> {
                     List<ReportActionEntity> actions = reportActionRepository.findByReportId(entity.getId());
@@ -130,7 +130,7 @@ public class ReportRepositoryAdapter implements ReportRepository {
     private ReportEntity fromAggregate(ContentReport contentReport) {
         return ReportEntity.builder()
                 .id(contentReport.getId().value())
-                .postId(UUID.fromString(contentReport.getPostId().value().toString()))
+                .postId(contentReport.getPostId().value())
                 .reportedUserId(contentReport.getReportedUserId().value())
                 .reporterUserId(contentReport.getReporterUserId() != null ? 
                     contentReport.getReporterUserId().value() : null)

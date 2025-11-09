@@ -1,4 +1,4 @@
-package com.levelup.journey.platform.social.infrastructure.persistence.cassandra.adapters;
+package com.levelup.journey.platform.social.infrastructure.persistence.mongo.adapters;
 
 import com.levelup.journey.platform.social.domain.model.aggregates.Reaction;
 import com.levelup.journey.platform.social.domain.model.repositories.ReactionRepository;
@@ -6,9 +6,10 @@ import com.levelup.journey.platform.social.domain.model.valueobjects.PostId;
 import com.levelup.journey.platform.social.domain.model.valueobjects.ReactionId;
 import com.levelup.journey.platform.social.domain.model.valueobjects.ReactionType;
 import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
-import com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities.ReactionEntity;
-import com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities.ReactionPrimaryKey;
-import com.levelup.journey.platform.social.infrastructure.persistence.cassandra.repositories.ReactionCassandraRepository;
+import com.levelup.journey.platform.social.infrastructure.persistence.mongo.entities.ReactionEntity;
+import com.levelup.journey.platform.social.infrastructure.persistence.mongo.entities.ReactionPrimaryKey;
+import com.levelup.journey.platform.social.infrastructure.persistence.mongo.repositories.ReactionCassandraRepository;
+
 import org.springframework.stereotype.Component;
 
 import java.util.List;

@@ -1,13 +1,14 @@
-package com.levelup.journey.platform.social.infrastructure.persistence.cassandra.adapters;
+package com.levelup.journey.platform.social.infrastructure.persistence.mongo.adapters;
 
 import com.levelup.journey.platform.social.domain.model.aggregates.Subscription;
 import com.levelup.journey.platform.social.domain.model.repositories.SubscriptionRepository;
 import com.levelup.journey.platform.social.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.social.domain.model.valueobjects.SubscriptionId;
 import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
-import com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities.SubscriptionEntity;
-import com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities.SubscriptionPrimaryKey;
-import com.levelup.journey.platform.social.infrastructure.persistence.cassandra.repositories.SubscriptionCassandraRepository;
+import com.levelup.journey.platform.social.infrastructure.persistence.mongo.entities.SubscriptionEntity;
+import com.levelup.journey.platform.social.infrastructure.persistence.mongo.entities.SubscriptionPrimaryKey;
+import com.levelup.journey.platform.social.infrastructure.persistence.mongo.repositories.SubscriptionCassandraRepository;
+
 import org.springframework.stereotype.Component;
 
 import java.util.List;

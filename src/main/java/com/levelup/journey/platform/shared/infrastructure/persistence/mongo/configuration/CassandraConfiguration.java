@@ -1,9 +1,10 @@
-package com.levelup.journey.platform.shared.infrastructure.persistence.cassandra.configuration;
+package com.levelup.journey.platform.shared.infrastructure.persistence.mongo.configuration;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
-import com.levelup.journey.platform.shared.infrastructure.persistence.cassandra.configuration.strategy.SnakeCaseWithPluralizedTableNamingStrategy;
+import com.levelup.journey.platform.shared.infrastructure.persistence.mongo.configuration.strategy.SnakeCaseWithPluralizedTableNamingStrategy;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

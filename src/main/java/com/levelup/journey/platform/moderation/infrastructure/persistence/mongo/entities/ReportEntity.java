@@ -1,12 +1,12 @@
-package com.levelup.journey.platform.moderation.infrastructure.persistence.cassandra.entities;
+package com.levelup.journey.platform.moderation.infrastructure.persistence.mongo.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.cassandra.core.mapping.CassandraType;
-import org.springframework.data.cassandra.core.mapping.PrimaryKey;
-import org.springframework.data.cassandra.core.mapping.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,27 +14,25 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * Report Entity for Cassandra persistence
- * Maps to the reports table
+ * Report Entity for MongoDB persistence.
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("reports")
+@Document(collection = "reports")
 public class ReportEntity {
 
-    @PrimaryKey
-    @CassandraType(type = CassandraType.Name.UUID)
+    @Id
     private UUID id;
 
-    @CassandraType(type = CassandraType.Name.UUID)
+    @Field(name = "post_id")
     private UUID postId;
 
-    @CassandraType(type = CassandraType.Name.UUID)
+    @Field(name = "reported_user_id")
     private UUID reportedUserId;
 
-    @CassandraType(type = CassandraType.Name.UUID)
+    @Field(name = "reporter_user_id")
     private UUID reporterUserId;
 
     private String category;
@@ -42,11 +40,10 @@ public class ReportEntity {
     private String description;
     private String status;
     private boolean autoDetected;
-    
-    @CassandraType(type = CassandraType.Name.LIST, typeArguments = CassandraType.Name.TEXT)
+
     @Builder.Default
     private List<String> suspiciousWords = new ArrayList<>();
-    
+
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

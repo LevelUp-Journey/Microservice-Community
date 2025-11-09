@@ -1,10 +1,11 @@
-package com.levelup.journey.platform.social.infrastructure.persistence.cassandra.repositories;
+package com.levelup.journey.platform.social.infrastructure.persistence.mongo.repositories;
 
-import com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities.ReactionEntity;
-import com.levelup.journey.platform.social.infrastructure.persistence.cassandra.entities.ReactionPrimaryKey;
 import org.springframework.data.cassandra.repository.CassandraRepository;
 import org.springframework.data.cassandra.repository.Query;
 import org.springframework.stereotype.Repository;
+
+import com.levelup.journey.platform.social.infrastructure.persistence.mongo.entities.ReactionEntity;
+import com.levelup.journey.platform.social.infrastructure.persistence.mongo.entities.ReactionPrimaryKey;
 
 import java.util.List;
 import java.util.Optional;
