@@ -1,14 +1,14 @@
-package com.levelup.journey.platform.post.infrastructure.persistence.cassandra.adapters;
+package com.levelup.journey.platform.post.infrastructure.persistence.mongo.adapters;
 
 import com.levelup.journey.platform.post.domain.model.aggregates.Post;
 import com.levelup.journey.platform.post.domain.model.repositories.PostRepository;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
-import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.ProfileId;
-import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.entities.PostEntity;
-import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.repositories.PostCassandraRepository;
+import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
+import com.levelup.journey.platform.post.infrastructure.persistence.mongo.entities.PostEntity;
+import com.levelup.journey.platform.post.infrastructure.persistence.mongo.repositories.PostMongoRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -16,42 +16,41 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Post Repository Adapter
- * Adapts domain Post repository to Cassandra persistence
- * Comments are managed separately through CommentRepository
+ * Mongo-backed repository adapter for posts.
+ * Comments are managed separately through CommentRepository.
  */
 @Component
 public class PostRepositoryAdapter implements PostRepository {
 
-    private final PostCassandraRepository cassandraRepository;
+    private final PostMongoRepository mongoRepository;
 
-    public PostRepositoryAdapter(PostCassandraRepository cassandraRepository) {
-        this.cassandraRepository = cassandraRepository;
+    public PostRepositoryAdapter(PostMongoRepository mongoRepository) {
+        this.mongoRepository = mongoRepository;
     }
 
     @Override
     public Post save(Post post) {
         PostEntity entity = toEntity(post);
-        cassandraRepository.save(entity);
+        mongoRepository.save(entity);
         return post;
     }
 
     @Override
     public Optional<Post> findById(PostId id) {
-        return cassandraRepository.findById(id.value())
+        return mongoRepository.findById(id.value())
                 .map(this::toDomain);
     }
 
     @Override
     public List<Post> findAll() {
-        return cassandraRepository.findAll().stream()
+        return mongoRepository.findAll().stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     public void deleteById(PostId id) {
-        cassandraRepository.deleteById(id.value());
+        mongoRepository.deleteById(id.value());
     }
 
     /**
@@ -60,15 +59,11 @@ public class PostRepositoryAdapter implements PostRepository {
      * @return list of posts
      */
     public List<Post> findByCommunityId(CommunityId communityId) {
-        return cassandraRepository.findByCommunityId(communityId.value()).stream()
+        return mongoRepository.findByCommunityIdOrderByCreatedAtDesc(communityId.value()).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Convert domain Post to Cassandra entity
-     * Note: Comments are not stored here - they are in a separate table
-     */
     private PostEntity toEntity(Post post) {
         return new PostEntity(
                 post.id().value(),
@@ -82,10 +77,6 @@ public class PostRepositoryAdapter implements PostRepository {
         );
     }
 
-    /**
-     * Convert Cassandra entity to domain Post
-     * Note: Comments are loaded separately via CommentRepository
-     */
     private Post toDomain(PostEntity entity) {
         ImageUrl imageUrl = entity.getImageUrl() != null ? ImageUrl.of(entity.getImageUrl()) : ImageUrl.empty();
         return Post.restore(
