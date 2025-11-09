@@ -3,32 +3,29 @@ package com.levelup.journey.platform.social.infrastructure.persistence.mongo.ent
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.cassandra.core.mapping.CassandraType;
-import org.springframework.data.cassandra.core.mapping.PrimaryKey;
-import org.springframework.data.cassandra.core.mapping.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
-import java.util.UUID;
 
 /**
- * Follow Entity for Cassandra persistence
- * Maps to the follows table
+ * Follow relationship stored in MongoDB.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("follows")
+@Document(collection = "follows")
 public class FollowEntity {
 
-    @PrimaryKey
-    @CassandraType(type = CassandraType.Name.UUID)
-    private UUID id;
+    @Id
+    private String id;
 
-    @CassandraType(type = CassandraType.Name.UUID)
-    private UUID followerId;
+    @Indexed(name = "idx_follows_follower")
+    private String followerId;
 
-    @CassandraType(type = CassandraType.Name.UUID)
-    private UUID followingId;
+    @Indexed(name = "idx_follows_following")
+    private String followingId;
 
     private Instant createdAt;
 }

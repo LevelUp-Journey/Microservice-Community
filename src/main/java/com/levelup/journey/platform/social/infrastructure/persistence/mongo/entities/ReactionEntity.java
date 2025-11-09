@@ -3,23 +3,32 @@ package com.levelup.journey.platform.social.infrastructure.persistence.mongo.ent
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.cassandra.core.mapping.PrimaryKey;
-import org.springframework.data.cassandra.core.mapping.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 
 /**
- * Reaction Entity for Cassandra persistence
- * Maps to the reactions table
+ * Reaction document persisted in MongoDB.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("reactions")
+@Document(collection = "reactions")
 public class ReactionEntity {
 
-    @PrimaryKey
-    private ReactionPrimaryKey id;
+    /**
+     * Synthetic identifier composed by `${postId}-${userId}` to enforce uniqueness.
+     */
+    @Id
+    private String id;
+
+    @Indexed(name = "idx_reactions_post")
+    private String postId;
+
+    @Indexed(name = "idx_reactions_user")
+    private String userId;
 
     private String reactionType;
     private Instant createdAt;

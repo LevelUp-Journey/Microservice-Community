@@ -5,90 +5,77 @@ import com.levelup.journey.platform.social.domain.model.repositories.FollowRepos
 import com.levelup.journey.platform.social.domain.model.valueobjects.FollowId;
 import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.social.infrastructure.persistence.mongo.entities.FollowEntity;
-import com.levelup.journey.platform.social.infrastructure.persistence.mongo.repositories.FollowCassandraRepository;
-
+import com.levelup.journey.platform.social.infrastructure.persistence.mongo.repositories.FollowMongoRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Follow Repository Adapter
- * Adapts domain Follow repository to Cassandra persistence
+ * Follow repository adapter backed by MongoDB.
  */
 @Component
 public class FollowRepositoryAdapter implements FollowRepository {
 
-    private final FollowCassandraRepository cassandraRepository;
+    private final FollowMongoRepository mongoRepository;
 
-    public FollowRepositoryAdapter(FollowCassandraRepository cassandraRepository) {
-        this.cassandraRepository = cassandraRepository;
+    public FollowRepositoryAdapter(FollowMongoRepository mongoRepository) {
+        this.mongoRepository = mongoRepository;
     }
 
     @Override
     public Follow save(Follow follow) {
         FollowEntity entity = toEntity(follow);
-        cassandraRepository.save(entity);
+        mongoRepository.save(entity);
         return follow;
     }
 
     @Override
     public Optional<Follow> findById(FollowId id) {
-        return cassandraRepository.findById(UUID.fromString(id.value()))
+        return mongoRepository.findById(id.value())
                 .map(this::toDomain);
     }
 
     @Override
     public List<Follow> findByFollowerId(UserId followerId) {
-        return cassandraRepository.findByFollowerId(UUID.fromString(followerId.value())).stream()
+        return mongoRepository.findByFollowerId(followerId.value()).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<Follow> findByFollowingId(UserId followingId) {
-        return cassandraRepository.findByFollowingId(UUID.fromString(followingId.value())).stream()
+        return mongoRepository.findByFollowingId(followingId.value()).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }
 
     @Override
     public Optional<Follow> findByFollowerIdAndFollowingId(UserId followerId, UserId followingId) {
-        return cassandraRepository.findByFollowerIdAndFollowingId(UUID.fromString(followerId.value()), UUID.fromString(followingId.value()))
+        return mongoRepository.findByFollowerIdAndFollowingId(followerId.value(), followingId.value())
                 .map(this::toDomain);
     }
 
     @Override
     public void deleteById(FollowId id) {
-        // Since we changed the primary key, we need to find and delete by the generated UUID id field
-        cassandraRepository.findAll().stream()
-                .filter(entity -> entity.getId().equals(UUID.fromString(id.value())))
-                .findFirst()
-                .ifPresent(cassandraRepository::delete);
+        mongoRepository.deleteById(id.value());
     }
 
-    /**
-     * Convert domain Follow to Cassandra entity
-     */
     private FollowEntity toEntity(Follow follow) {
         return new FollowEntity(
-                UUID.fromString(follow.id().value()),
-                UUID.fromString(follow.followerId().value()),
-                UUID.fromString(follow.followingId().value()),
+                follow.id().value(),
+                follow.followerId().value(),
+                follow.followingId().value(),
                 follow.createdAt()
         );
     }
 
-    /**
-     * Convert Cassandra entity to domain Follow
-     */
     private Follow toDomain(FollowEntity entity) {
         return Follow.restore(
-                FollowId.of(entity.getId().toString()),
-                UserId.of(entity.getFollowerId().toString()),
-                UserId.of(entity.getFollowingId().toString()),
+                FollowId.of(entity.getId()),
+                UserId.of(entity.getFollowerId()),
+                UserId.of(entity.getFollowingId()),
                 entity.getCreatedAt()
         );
     }

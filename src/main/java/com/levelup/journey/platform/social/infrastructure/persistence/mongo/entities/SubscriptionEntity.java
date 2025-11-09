@@ -3,23 +3,29 @@ package com.levelup.journey.platform.social.infrastructure.persistence.mongo.ent
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.cassandra.core.mapping.PrimaryKey;
-import org.springframework.data.cassandra.core.mapping.Table;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
 
 /**
- * Subscription Entity for Cassandra persistence
- * Maps to the subscriptions table
+ * Subscription document for MongoDB.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Table("subscriptions")
+@Document(collection = "subscriptions")
 public class SubscriptionEntity {
 
-    @PrimaryKey
-    private SubscriptionPrimaryKey id;
+    @Id
+    private String id;
+
+    @Indexed(name = "idx_subscriptions_user")
+    private String userId;
+
+    @Indexed(name = "idx_subscriptions_community")
+    private String communityId;
 
     private Instant createdAt;
 }
