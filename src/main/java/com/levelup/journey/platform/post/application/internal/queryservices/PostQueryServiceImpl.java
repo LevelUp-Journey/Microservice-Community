@@ -8,7 +8,7 @@ import com.levelup.journey.platform.post.domain.model.queries.GetPostsByCommunit
 import com.levelup.journey.platform.post.domain.model.repositories.PostRepository;
 import com.levelup.journey.platform.post.domain.services.CommentQueryService;
 import com.levelup.journey.platform.post.domain.services.PostQueryService;
-import com.levelup.journey.platform.post.infrastructure.persistence.cassandra.adapters.PostRepositoryAdapter;
+import com.levelup.journey.platform.post.infrastructure.persistence.mongo.adapters.PostRepositoryAdapter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -25,6 +25,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -54,7 +56,7 @@ public class CommunityController {
      * Create a new community
      */
     @PostMapping
-    @PreAuthorize("hasAuthority('TEACHER') or hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_TEACHER') or hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Create a new community", description = "Create a new community with a name and description. Only teachers and admins can create communities.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Community created successfully",
@@ -70,11 +72,17 @@ public class CommunityController {
                     content = @Content)
     })
     public ResponseEntity<CommunityResource> createCommunity(@Valid @RequestBody CreateCommunityResource resource) {
-        logger.info("Creating community with name: {}, ownerId: {}",
-                   resource.name(), resource.ownerId());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            logger.warn("Attempted to create community without a valid authenticated user");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String ownerId = authentication.getName().trim();
+        logger.info("Creating community with name: {} for ownerId: {}", resource.name(), ownerId);
 
         try {
-            var command = CreateCommunityCommandFromResourceAssembler.toCommandFromResource(resource);
+            var command = CreateCommunityCommandFromResourceAssembler.toCommandFromResource(resource, ownerId);
             var community = communityCommandService.handle(command);
 
             if (community.isEmpty()) {
@@ -99,7 +107,7 @@ public class CommunityController {
      * Update an existing community
      */
     @PutMapping("/{communityId}")
-    @PreAuthorize("hasAuthority('TEACHER') or hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_TEACHER') or hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Update community", description = "Update an existing community's name, description, and image URL. Only teachers and admins can update communities.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Community updated successfully",
@@ -145,7 +153,7 @@ public class CommunityController {
      * Delete a community
      */
     @DeleteMapping("/{communityId}")
-    @PreAuthorize("hasAuthority('TEACHER') or hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('ROLE_TEACHER') or hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Delete community", description = "Delete a community. Only the community owner or admin can delete communities.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Community deleted successfully",
@@ -159,8 +167,14 @@ public class CommunityController {
             @ApiResponse(responseCode = "500", description = "Internal server error",
                     content = @Content)
     })
-    public ResponseEntity<Void> deleteCommunity(@PathVariable String communityId,
-                                                @RequestParam String requesterId) {
+    public ResponseEntity<Void> deleteCommunity(@PathVariable String communityId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            logger.warn("Attempted to delete community {} without a valid authenticated user", communityId);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String requesterId = authentication.getName().trim();
         logger.info("Deleting community with ID: {}, requesterId: {}", communityId, requesterId);
 
         try {

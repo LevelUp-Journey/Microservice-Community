@@ -33,6 +33,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -79,11 +81,18 @@ public class PostController {
                     content = @Content)
     })
     public ResponseEntity<PostResource> createPost(@Valid @RequestBody CreatePostResource resource) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            logger.warn("Attempted to create post without a valid authenticated user");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String authorId = authentication.getName().trim();
         logger.info("Creating post with title: {}, communityId: {}, authorId: {}",
-                   resource.title(), resource.communityId(), resource.authorId());
+                   resource.title(), resource.communityId(), authorId);
 
         try {
-            var command = CreatePostCommandFromResourceAssembler.toCommandFromResource(resource);
+            var command = CreatePostCommandFromResourceAssembler.toCommandFromResource(resource, authorId);
             var post = postCommandService.handle(command);
 
             if (post.isEmpty()) {
@@ -286,11 +295,18 @@ public class PostController {
     })
     public ResponseEntity<PostResource> addComment(@PathVariable String postId,
                                                    @Valid @RequestBody AddCommentResource resource) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            logger.warn("Attempted to add comment to post {} without a valid authenticated user", postId);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String authorId = authentication.getName().trim();
         logger.info("Adding comment to post: {}, authorId: {}",
-                   postId, resource.authorId());
+                   postId, authorId);
 
         try {
-            var command = AddCommentCommandFromResourceAssembler.toCommandFromResource(postId, resource);
+            var command = AddCommentCommandFromResourceAssembler.toCommandFromResource(postId, resource, authorId);
             var post = postCommandService.handle(command);
 
             if (post.isEmpty()) {
@@ -381,8 +397,14 @@ public class PostController {
                     content = @Content)
     })
     public ResponseEntity<PostResource> deleteComment(@PathVariable String postId,
-                                                      @PathVariable String commentId,
-                                                      @RequestParam String requesterId) {
+                                                      @PathVariable String commentId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            logger.warn("Attempted to delete comment {} from post {} without a valid authenticated user", commentId, postId);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String requesterId = authentication.getName().trim();
         logger.info("Deleting comment: {} from post: {}, requesterId: {}", commentId, postId, requesterId);
 
         try {
@@ -426,8 +448,14 @@ public class PostController {
             @ApiResponse(responseCode = "500", description = "Internal server error",
                     content = @Content)
     })
-    public ResponseEntity<Void> deletePost(@PathVariable String postId,
-                                           @RequestParam String requesterId) {
+    public ResponseEntity<Void> deletePost(@PathVariable String postId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            logger.warn("Attempted to delete post {} without a valid authenticated user", postId);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String requesterId = authentication.getName().trim();
         logger.info("Deleting post with ID: {}, requesterId: {}", postId, requesterId);
 
         try {

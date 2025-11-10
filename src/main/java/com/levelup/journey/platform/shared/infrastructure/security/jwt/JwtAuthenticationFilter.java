@@ -61,21 +61,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // Extract username and roles from token
+            // Extract username, userId and roles from token
             final String username = jwtService.extractUsername(jwt);
+            final String userId = jwtService.extractUserId(jwt);
             final List<String> roles = jwtService.extractRoles(jwt);
 
             // If user is not already authenticated, set authentication in context
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            String principal = (userId != null && !userId.isBlank()) ? userId : username;
+
+            if (principal != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 
                 // Convert roles to Spring Security authorities
-                List<SimpleGrantedAuthority> authorities = roles.stream()
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
+                List<SimpleGrantedAuthority> authorities = roles == null ? List.of() :
+                        roles.stream()
+                                .map(SimpleGrantedAuthority::new)
+                                .collect(Collectors.toList());
 
                 // Create authentication token
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        username,
+                        principal,
                         null,
                         authorities
                 );
@@ -86,7 +90,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Set authentication in security context
                 SecurityContextHolder.getContext().setAuthentication(authToken);
                 
-                logger.debug("User '{}' authenticated with roles: {}", username, roles);
+                logger.debug("User '{}' authenticated with roles: {}", principal, roles);
             }
 
         } catch (Exception e) {

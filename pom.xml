@@ -74,10 +74,10 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Spring Data Cassandra -->
+        <!-- Spring Data MongoDB -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-cassandra</artifactId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
 
         <!-- Pluralize library for table naming strategy -->

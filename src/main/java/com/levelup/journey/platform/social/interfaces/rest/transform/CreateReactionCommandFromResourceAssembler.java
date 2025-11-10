@@ -11,10 +11,10 @@ import com.levelup.journey.platform.social.interfaces.rest.resources.CreateReact
  */
 public class CreateReactionCommandFromResourceAssembler {
 
-    public static CreateReactionCommand toCommandFromResource(CreateReactionResource resource) {
+    public static CreateReactionCommand toCommandFromResource(CreateReactionResource resource, String userId) {
         return new CreateReactionCommand(
                 PostId.of(resource.postId()),
-                UserId.of(resource.userId()),
+                UserId.of(userId),
                 ReactionType.valueOf(resource.reactionType())
         );
     }

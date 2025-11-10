@@ -42,6 +42,14 @@ public class JwtService {
     }
 
     /**
+     * Extract userId from token
+     */
+    public String extractUserId(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get("userId", String.class);
+    }
+
+    /**
      * Extract a specific claim from token
      */
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
