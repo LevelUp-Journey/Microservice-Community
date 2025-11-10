@@ -1,9 +1,11 @@
 package com.levelup.journey.platform.post.interfaces.rest;
 
 import com.levelup.journey.platform.post.domain.model.queries.GetAllCommunitiesQuery;
+import com.levelup.journey.platform.post.domain.model.queries.GetCommunitiesByCreatorUserIdQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetCommunityByIdQuery;
 import com.levelup.journey.platform.post.domain.model.commands.DeleteCommunityCommand;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
+import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.post.domain.services.CommunityCommandService;
 import com.levelup.journey.platform.post.domain.services.CommunityQueryService;
 import com.levelup.journey.platform.post.interfaces.rest.resources.CommunityResource;
@@ -267,6 +269,46 @@ public class CommunityController {
 
         } catch (Exception e) {
             logger.error("Unexpected error retrieving all communities", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Get communities by creator user ID
+     */
+    @GetMapping("/creator/{creatorUserId}")
+    @Operation(
+        summary = "Get communities by creator user ID",
+        description = "Retrieve all communities created by a specific user (teacher or admin)"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Communities retrieved successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = CommunityResource.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid user ID format",
+                    content = @Content),
+            @ApiResponse(responseCode = "500", description = "Internal server error",
+                    content = @Content)
+    })
+    public ResponseEntity<List<CommunityResource>> getCommunitiesByCreatorUserId(@PathVariable String creatorUserId) {
+        logger.info("Retrieving communities for creator user ID: {}", creatorUserId);
+
+        try {
+            var query = new GetCommunitiesByCreatorUserIdQuery(UserId.of(creatorUserId));
+            var communities = communityQueryService.handle(query);
+
+            var communityResources = communities.stream()
+                    .map(CommunityResourceFromEntityAssembler::toResourceFromEntity)
+                    .collect(Collectors.toList());
+
+            logger.info("Retrieved {} communities for creator user ID: {}", communityResources.size(), creatorUserId);
+            return ResponseEntity.ok(communityResources);
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid creator user ID format: {} - {}", creatorUserId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            logger.error("Unexpected error retrieving communities for creator user ID: {}", creatorUserId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

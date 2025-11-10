@@ -2,6 +2,7 @@ package com.levelup.journey.platform.post.domain.services;
 
 import com.levelup.journey.platform.post.domain.model.aggregates.Community;
 import com.levelup.journey.platform.post.domain.model.queries.GetAllCommunitiesQuery;
+import com.levelup.journey.platform.post.domain.model.queries.GetCommunitiesByCreatorUserIdQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetCommunityByIdQuery;
 
 import java.util.List;
@@ -26,4 +27,11 @@ public interface CommunityQueryService {
      * @return list of all communities
      */
     List<Community> handle(GetAllCommunitiesQuery query);
+
+    /**
+     * Handles the query to get communities by creator user ID
+     * @param query the get communities by creator user id query
+     * @return list of communities created by the user
+     */
+    List<Community> handle(GetCommunitiesByCreatorUserIdQuery query);
 }

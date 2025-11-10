@@ -2,10 +2,12 @@ package com.levelup.journey.platform.post.application.internal.queryservices;
 
 import com.levelup.journey.platform.post.domain.model.aggregates.Community;
 import com.levelup.journey.platform.post.domain.model.queries.GetAllCommunitiesQuery;
+import com.levelup.journey.platform.post.domain.model.queries.GetCommunitiesByCreatorUserIdQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetCommunityByIdQuery;
 import com.levelup.journey.platform.post.domain.model.repositories.CommunityRepository;
 import com.levelup.journey.platform.post.domain.services.CommunityQueryService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,12 +26,20 @@ public class CommunityQueryServiceImpl implements CommunityQueryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Community> handle(GetCommunityByIdQuery query) {
         return communityRepository.findById(query.id());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Community> handle(GetAllCommunitiesQuery query) {
         return communityRepository.findAll();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Community> handle(GetCommunitiesByCreatorUserIdQuery query) {
+        return communityRepository.findByOwnerId(query.creatorUserId());
     }
 }
