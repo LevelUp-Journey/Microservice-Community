@@ -10,6 +10,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.MongoDatabaseFactory;
 import org.springframework.data.mongodb.config.AbstractMongoClientConfiguration;
 import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
+import org.springframework.data.mongodb.core.convert.DefaultMongoTypeMapper;
+import org.springframework.data.mongodb.core.convert.MappingMongoConverter;
+import org.springframework.data.mongodb.core.convert.MongoCustomConversions;
+import org.springframework.data.mongodb.core.mapping.MongoMappingContext;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
 import java.util.Collection;
@@ -52,6 +56,16 @@ public class MongoConfiguration extends AbstractMongoClientConfiguration {
     @Override
     public MongoDatabaseFactory mongoDbFactory() {
         return new SimpleMongoClientDatabaseFactory(mongoClient(), getDatabaseName());
+    }
+
+    @Bean
+    @Override
+    public MappingMongoConverter mappingMongoConverter(MongoDatabaseFactory databaseFactory,
+                                                       MongoCustomConversions customConversions,
+                                                       MongoMappingContext mappingContext) {
+        MappingMongoConverter converter = super.mappingMongoConverter(databaseFactory, customConversions, mappingContext);
+        converter.setTypeMapper(new DefaultMongoTypeMapper(null)); // Avoid persisting _class metadata
+        return converter;
     }
 
     @Override
