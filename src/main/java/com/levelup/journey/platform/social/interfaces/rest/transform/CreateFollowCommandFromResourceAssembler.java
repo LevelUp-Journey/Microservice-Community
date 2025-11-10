@@ -9,9 +9,9 @@ import com.levelup.journey.platform.social.interfaces.rest.resources.CreateFollo
  */
 public class CreateFollowCommandFromResourceAssembler {
 
-    public static CreateFollowCommand toCommandFromResource(CreateFollowResource resource) {
+    public static CreateFollowCommand toCommandFromResource(CreateFollowResource resource, String followerId) {
         return new CreateFollowCommand(
-                UserId.of(resource.followerId()),
+                UserId.of(followerId),
                 UserId.of(resource.followingId())
         );
     }

@@ -11,11 +11,9 @@ import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
 import com.levelup.journey.platform.post.domain.services.PostCommandService;
 import com.levelup.journey.platform.post.domain.services.PostQueryService;
 import com.levelup.journey.platform.post.interfaces.rest.resources.AddCommentResource;
-import com.levelup.journey.platform.post.interfaces.rest.resources.EditCommentResource;
 import com.levelup.journey.platform.post.interfaces.rest.resources.CreatePostResource;
 import com.levelup.journey.platform.post.interfaces.rest.resources.PostResource;
 import com.levelup.journey.platform.post.interfaces.rest.transform.AddCommentCommandFromResourceAssembler;
-import com.levelup.journey.platform.post.interfaces.rest.transform.EditCommentCommandFromResourceAssembler;
 import com.levelup.journey.platform.post.interfaces.rest.transform.CreatePostCommandFromResourceAssembler;
 import com.levelup.journey.platform.post.interfaces.rest.transform.PostResourceFromEntityAssembler;
 import com.levelup.journey.platform.shared.domain.acl.SocialRelationshipService;
@@ -66,7 +64,11 @@ public class PostController {
      * Create a new post
      */
     @PostMapping
-    @Operation(summary = "Create a new post", description = "Publish a new post in a community. Only community owners and subscribed teachers can post.")
+    @Operation(
+        summary = "Create a new post",
+        description = "Publish a new post in a community. Only community owners and subscribed teachers can post. "
+                + "The authorId is resolved from the authenticated JWT and the related profile is fetched internally, so clients do not need to send any author identifiers."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Post created successfully",
                     content = @Content(mediaType = "application/json",
@@ -279,7 +281,10 @@ public class PostController {
         }
     }
     @PostMapping("/{postId}/comments")
-    @Operation(summary = "Add comment to post", description = "Add a new comment to an existing post")
+    @Operation(
+        summary = "Add comment to post",
+        description = "Add a new comment to an existing post. The commenter identity (user and profile) is derived from the authenticated JWT, so the body only needs the comment content."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Comment added successfully",
                     content = @Content(mediaType = "application/json",
@@ -325,55 +330,6 @@ public class PostController {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             logger.error("Unexpected error adding comment to post: {}", postId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    /**
-     * Edit a comment
-     */
-    @PutMapping("/{postId}/comments/{commentId}")
-    @Operation(summary = "Edit comment", description = "Edit a comment's content. Only the comment author can edit their comments.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Comment edited successfully",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = PostResource.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input data or comment not found",
-                    content = @Content),
-            @ApiResponse(responseCode = "403", description = "Access denied - only comment author can edit comments",
-                    content = @Content),
-            @ApiResponse(responseCode = "404", description = "Post or comment not found",
-                    content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
-                    content = @Content)
-    })
-    public ResponseEntity<PostResource> editComment(@PathVariable String postId,
-                                                    @PathVariable String commentId,
-                                                    @RequestParam String requesterId,
-                                                    @Valid @RequestBody EditCommentResource resource) {
-        logger.info("Editing comment: {} on post: {}, requesterId: {}",
-                   commentId, postId, requesterId);
-
-        try {
-            var command = EditCommentCommandFromResourceAssembler.toCommandFromResource(postId, commentId, requesterId, resource);
-            var post = postCommandService.handle(command);
-
-            if (post.isEmpty()) {
-                logger.warn("Failed to edit comment: {} on post: {} - comment not found or access denied",
-                           commentId, postId);
-                return ResponseEntity.notFound().build();
-            }
-
-            var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
-            logger.info("Comment edited successfully: {} on post: {}", commentId, postId);
-            return ResponseEntity.ok(postResource);
-
-        } catch (IllegalArgumentException e) {
-            logger.error("Validation error editing comment: {} on post: {} - {}",
-                        commentId, postId, e.getMessage());
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            logger.error("Unexpected error editing comment: {} on post: {}", commentId, postId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

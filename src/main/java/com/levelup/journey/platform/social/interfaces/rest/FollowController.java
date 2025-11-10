@@ -24,6 +24,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -51,7 +53,7 @@ public class FollowController {
 
     @PostMapping
     @Operation(summary = "Create a new follow relationship",
-               description = "Create a follow relationship between two users")
+               description = "Create a follow relationship between two users. The follower is inferred from the authenticated JWT; the payload only requires the user to follow.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Follow relationship created successfully",
                     content = @Content(mediaType = "application/json",
@@ -61,10 +63,17 @@ public class FollowController {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     public ResponseEntity<FollowResource> createFollow(@Valid @RequestBody CreateFollowResource resource) {
-        logger.info("Creating follow relationship: {} -> {}", resource.followerId(), resource.followingId());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            logger.warn("Attempted to create follow relationship without a valid authenticated user");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String followerId = authentication.getName().trim();
+        logger.info("Creating follow relationship: {} -> {}", followerId, resource.followingId());
 
         try {
-            var command = CreateFollowCommandFromResourceAssembler.toCommandFromResource(resource);
+            var command = CreateFollowCommandFromResourceAssembler.toCommandFromResource(resource, followerId);
             var follow = followCommandService.handle(command);
 
             if (follow.isEmpty()) {

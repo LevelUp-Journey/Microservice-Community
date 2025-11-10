@@ -6,8 +6,11 @@ import com.levelup.journey.platform.post.domain.model.commands.DeleteCommunityCo
 import com.levelup.journey.platform.post.domain.model.commands.UpdateCommunityCommand;
 import com.levelup.journey.platform.post.domain.model.repositories.CommunityRepository;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
+import com.levelup.journey.platform.post.domain.model.valueobjects.ProfileId;
+import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.post.domain.services.CommunityCommandService;
 import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
+import com.levelup.journey.platform.shared.domain.acl.UserDirectoryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -27,9 +30,12 @@ public class CommunityCommandServiceImpl implements CommunityCommandService {
     private static final Logger logger = LoggerFactory.getLogger(CommunityCommandServiceImpl.class);
 
     private final CommunityRepository communityRepository;
+    private final UserDirectoryService userDirectoryService;
 
-    public CommunityCommandServiceImpl(CommunityRepository communityRepository) {
+    public CommunityCommandServiceImpl(CommunityRepository communityRepository,
+                                       UserDirectoryService userDirectoryService) {
         this.communityRepository = communityRepository;
+        this.userDirectoryService = userDirectoryService;
     }
 
     @Override
@@ -41,6 +47,8 @@ public class CommunityCommandServiceImpl implements CommunityCommandService {
                    communityId.value(), command.name(), command.ownerId());
 
         try {
+            ProfileId ownerProfileId = resolveProfileId(command.ownerId());
+
             // Check if community with this ID already exists (very unlikely with UUID)
             var existingCommunity = communityRepository.findById(communityId);
             if (existingCommunity.isPresent()) {
@@ -53,7 +61,7 @@ public class CommunityCommandServiceImpl implements CommunityCommandService {
             Community community = Community.create(
                     communityId,
                     command.ownerId(),
-                    command.ownerProfileId(),
+                    ownerProfileId,
                     command.name(),
                     command.description(),
                     imageUrl
@@ -120,6 +128,8 @@ public class CommunityCommandServiceImpl implements CommunityCommandService {
                    command.communityId().value(), command.requesterId().value());
 
         try {
+            ensureUserExists(command.requesterId());
+
             // Find the community
             Optional<Community> communityOptional = communityRepository.findById(command.communityId());
             if (communityOptional.isEmpty()) {
@@ -170,5 +180,16 @@ public class CommunityCommandServiceImpl implements CommunityCommandService {
                         command.communityId().value(), e);
             return false; // Return false for unexpected errors
         }
+    }
+
+    private void ensureUserExists(UserId userId) {
+        if (!userDirectoryService.userExists(userId.value())) {
+            throw new IllegalArgumentException("El usuario autenticado no existe en el directorio de usuarios.");
+        }
+    }
+
+    private ProfileId resolveProfileId(UserId userId) {
+        String profileId = userDirectoryService.requireProfileIdByUserId(userId.value());
+        return ProfileId.of(profileId);
     }
 }

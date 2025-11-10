@@ -1,6 +1,7 @@
 package com.levelup.journey.platform.user.application.internal.queryservices;
 
 import com.levelup.journey.platform.user.domain.model.aggregates.User;
+import com.levelup.journey.platform.user.domain.model.queries.GetUserByProfileIdQuery;
 import com.levelup.journey.platform.user.domain.model.queries.GetUserByUserIdQuery;
 import com.levelup.journey.platform.user.domain.model.repositories.UserRepository;
 import com.levelup.journey.platform.user.domain.services.UserQueryService;
@@ -25,5 +26,11 @@ public class UserQueryServiceImpl implements UserQueryService {
     @Transactional(readOnly = true)
     public Optional<User> handle(GetUserByUserIdQuery query) {
         return userRepository.findByUserId(query.userId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<User> handle(GetUserByProfileIdQuery query) {
+        return userRepository.findByProfileId(query.profileId());
     }
 }

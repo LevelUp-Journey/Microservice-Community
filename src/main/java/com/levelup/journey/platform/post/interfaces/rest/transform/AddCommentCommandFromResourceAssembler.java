@@ -3,7 +3,6 @@ package com.levelup.journey.platform.post.interfaces.rest.transform;
 import com.levelup.journey.platform.post.domain.model.commands.AddCommentCommand;
 import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
-import com.levelup.journey.platform.post.domain.model.valueobjects.ProfileId;
 import com.levelup.journey.platform.post.interfaces.rest.resources.AddCommentResource;
 
 /**
@@ -16,7 +15,6 @@ public class AddCommentCommandFromResourceAssembler {
         return new AddCommentCommand(
                 PostId.of(postId),
                 UserId.of(authorId),
-                ProfileId.of(resource.authorProfileId()),
                 resource.content(),
                 imageUrl
         );
