@@ -6,9 +6,11 @@ import com.levelup.journey.platform.post.domain.model.queries.GetCommentsByPostI
 import com.levelup.journey.platform.post.domain.model.queries.GetCommunityByIdQuery;
 import com.levelup.journey.platform.post.domain.model.repositories.PostRepository;
 import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
+import com.levelup.journey.platform.post.domain.model.valueobjects.ProfileId;
+import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.post.domain.services.*;
-import com.levelup.journey.platform.shared.domain.acl.ContentModerationService;
 import com.levelup.journey.platform.shared.domain.acl.SocialRelationshipService;
+import com.levelup.journey.platform.shared.domain.acl.UserDirectoryService;
 import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,21 +35,21 @@ public class PostCommandServiceImpl implements PostCommandService {
     private final CommunityQueryService communityQueryService;
     private final CommentCommandService commentCommandService;
     private final CommentQueryService commentQueryService;
-    private final ContentModerationService contentModerationService;
     private final SocialRelationshipService socialRelationshipService;
+    private final UserDirectoryService userDirectoryService;
 
     public PostCommandServiceImpl(PostRepository postRepository,
                                   CommunityQueryService communityQueryService,
                                   CommentCommandService commentCommandService,
                                   CommentQueryService commentQueryService,
-                                  ContentModerationService contentModerationService,
-                                  SocialRelationshipService socialRelationshipService) {
+                                  SocialRelationshipService socialRelationshipService,
+                                  UserDirectoryService userDirectoryService) {
         this.postRepository = postRepository;
         this.communityQueryService = communityQueryService;
         this.commentCommandService = commentCommandService;
         this.commentQueryService = commentQueryService;
-        this.contentModerationService = contentModerationService;
         this.socialRelationshipService = socialRelationshipService;
+        this.userDirectoryService = userDirectoryService;
     }
 
     @Override
@@ -59,6 +61,8 @@ public class PostCommandServiceImpl implements PostCommandService {
                    postId.value(), command.title(), command.communityId(), command.authorId());
 
         try {
+            ProfileId authorProfileId = resolveProfileId(command.authorId());
+
             // Validate that the community exists
             var communityQuery = new GetCommunityByIdQuery(command.communityId());
             var communityOptional = communityQueryService.handle(communityQuery);
@@ -119,7 +123,7 @@ public class PostCommandServiceImpl implements PostCommandService {
                     postId,
                     command.communityId(),
                     command.authorId(),
-                    command.authorProfileId(),
+                    authorProfileId,
                     command.title(),
                     command.content(),
                     imageUrl
@@ -128,25 +132,6 @@ public class PostCommandServiceImpl implements PostCommandService {
             // Save post
             Post savedPost = postRepository.save(post);
             logger.info("Post published and saved successfully with ID: {}", savedPost.id());
-
-            // Analyze content for moderation
-            try {
-                String fullContent = command.title() + " " + command.content();
-                String reportId = contentModerationService.analyzeContent(
-                    savedPost.id().value(),
-                    command.authorId().value(),
-                    fullContent
-                );
-
-                if (reportId != null) {
-                    logger.warn("Suspicious content detected in post {}. Report created with ID: {}",
-                              savedPost.id(), reportId);
-                }
-            } catch (Exception e) {
-                logger.error("Error analyzing content for moderation in post {}: {}",
-                           savedPost.id(), e.getMessage());
-                // Don't fail the post creation if moderation analysis fails
-            }
 
             return Optional.of(savedPost);
 
@@ -325,6 +310,8 @@ public class PostCommandServiceImpl implements PostCommandService {
                    command.postId(), command.requesterId());
 
         try {
+            ensureUserExists(command.requesterId());
+
             // Find the post
             Optional<Post> postOptional = postRepository.findById(command.postId());
             if (postOptional.isEmpty()) {
@@ -389,5 +376,16 @@ public class PostCommandServiceImpl implements PostCommandService {
                         command.postId(), e);
             return false; // Return false for unexpected errors
         }
+    }
+
+    private void ensureUserExists(UserId userId) {
+        if (!userDirectoryService.userExists(userId.value())) {
+            throw new IllegalArgumentException("El usuario autenticado no existe en el directorio de usuarios.");
+        }
+    }
+
+    private ProfileId resolveProfileId(UserId userId) {
+        String profileId = userDirectoryService.requireProfileIdByUserId(userId.value());
+        return ProfileId.of(profileId);
     }
 }

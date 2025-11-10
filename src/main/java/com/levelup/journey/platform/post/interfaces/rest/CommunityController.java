@@ -57,7 +57,11 @@ public class CommunityController {
      */
     @PostMapping
     @PreAuthorize("hasAuthority('ROLE_TEACHER') or hasAuthority('ROLE_ADMIN')")
-    @Operation(summary = "Create a new community", description = "Create a new community with a name and description. Only teachers and admins can create communities.")
+    @Operation(
+        summary = "Create a new community",
+        description = "Create a new community with a name and description. Only teachers and admins can create communities. "
+                + "The ownerId and corresponding profile are resolved from the authenticated JWT, so the payload only needs the community information."
+    )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Community created successfully",
                     content = @Content(mediaType = "application/json",

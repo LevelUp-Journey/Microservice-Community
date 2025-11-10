@@ -1,6 +1,7 @@
 package com.levelup.journey.platform.user.domain.services;
 
 import com.levelup.journey.platform.user.domain.model.aggregates.User;
+import com.levelup.journey.platform.user.domain.model.queries.GetUserByProfileIdQuery;
 import com.levelup.journey.platform.user.domain.model.queries.GetUserByUserIdQuery;
 
 import java.util.Optional;
@@ -16,4 +17,11 @@ public interface UserQueryService {
      * @return an Optional containing the user if found
      */
     Optional<User> handle(GetUserByUserIdQuery query);
+
+    /**
+     * Handles the query to get a user by profile ID
+     * @param query the query with profile ID
+     * @return an Optional containing the user if found
+     */
+    Optional<User> handle(GetUserByProfileIdQuery query);
 }

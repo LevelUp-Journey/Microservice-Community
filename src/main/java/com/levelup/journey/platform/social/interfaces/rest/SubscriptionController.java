@@ -167,8 +167,8 @@ public class SubscriptionController {
     }
 
     @DeleteMapping("/{subscriptionId}")
-    @PreAuthorize("hasAuthority('ROLE_STUDENT') or hasAuthority('ROLE_TEACHER')")
-    @Operation(summary = "Delete a subscription", description = "Unsubscribe from a community. Both students and teachers can unsubscribe.")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Delete a subscription", description = "Unsubscribe from a community. Any authenticated role can unsubscribe.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Subscription deleted successfully"),
             @ApiResponse(responseCode = "403", description = "Access denied - only students and teachers can unsubscribe"),

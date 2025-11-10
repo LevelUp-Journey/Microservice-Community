@@ -7,8 +7,11 @@ import com.levelup.journey.platform.post.domain.model.entities.Comment;
 import com.levelup.journey.platform.post.domain.model.repositories.CommentRepository;
 import com.levelup.journey.platform.post.domain.model.repositories.PostRepository;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommentId;
+import com.levelup.journey.platform.post.domain.model.valueobjects.ProfileId;
+import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.post.domain.services.CommentCommandService;
 import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
+import com.levelup.journey.platform.shared.domain.acl.UserDirectoryService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,10 +26,14 @@ public class CommentCommandServiceImpl implements CommentCommandService {
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
+    private final UserDirectoryService userDirectoryService;
 
-    public CommentCommandServiceImpl(CommentRepository commentRepository, PostRepository postRepository) {
+    public CommentCommandServiceImpl(CommentRepository commentRepository,
+                                     PostRepository postRepository,
+                                     UserDirectoryService userDirectoryService) {
         this.commentRepository = commentRepository;
         this.postRepository = postRepository;
+        this.userDirectoryService = userDirectoryService;
     }
 
     @Override
@@ -38,13 +45,15 @@ public class CommentCommandServiceImpl implements CommentCommandService {
             throw new IllegalArgumentException("Post not found with id: " + command.postId().value());
         }
 
+        var authorProfileId = resolveProfileId(command.authorId());
+
         // Create and save the comment
         var commentId = CommentId.random();
         var imageUrl = command.imageUrl() != null ? ImageUrl.of(command.imageUrl()) : ImageUrl.empty();
         var comment = new Comment(
                 commentId,
                 command.authorId(),
-                command.authorProfileId(),
+                authorProfileId,
                 command.content(),
                 imageUrl,
                 null // createdAt will be set to Instant.now() by constructor
@@ -58,6 +67,8 @@ public class CommentCommandServiceImpl implements CommentCommandService {
     @Override
     @Transactional
     public boolean handle(DeleteCommentCommand command) {
+        ensureUserExists(command.requesterId());
+
         // Verify post exists
         var post = postRepository.findById(command.postId());
         if (post.isEmpty()) {
@@ -100,6 +111,8 @@ public class CommentCommandServiceImpl implements CommentCommandService {
     @Override
     @Transactional
     public Optional<Comment> handle(EditCommentCommand command) {
+        ensureUserExists(command.requesterId());
+
         // Verify post exists
         var post = postRepository.findById(command.postId());
         if (post.isEmpty()) {
@@ -134,5 +147,16 @@ public class CommentCommandServiceImpl implements CommentCommandService {
         commentRepository.update(updatedComment, command.postId());
 
         return Optional.of(updatedComment);
+    }
+
+    private void ensureUserExists(UserId userId) {
+        if (!userDirectoryService.userExists(userId.value())) {
+            throw new IllegalArgumentException("El usuario autenticado no existe en el directorio de usuarios.");
+        }
+    }
+
+    private ProfileId resolveProfileId(UserId userId) {
+        String profileId = userDirectoryService.requireProfileIdByUserId(userId.value());
+        return ProfileId.of(profileId);
     }
 }
