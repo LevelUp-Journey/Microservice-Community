@@ -12,11 +12,6 @@ import jakarta.validation.constraints.Size;
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record AddCommentResource(
-        @NotBlank(message = "El ID del autor es obligatorio")
-        @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                message = "El ID del autor debe ser un UUID válido")
-        String authorId,
-
         @NotBlank(message = "El ID del perfil del autor es obligatorio")
         @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
                 message = "El ID del perfil del autor debe ser un UUID válido")

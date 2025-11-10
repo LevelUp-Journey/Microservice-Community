@@ -23,7 +23,8 @@ import java.util.List;
 @EnableMongoRepositories(basePackages = {
         "com.levelup.journey.platform.post.infrastructure.persistence.mongo.repositories",
         "com.levelup.journey.platform.social.infrastructure.persistence.mongo.repositories",
-        "com.levelup.journey.platform.moderation.infrastructure.persistence.mongo.repositories"
+        "com.levelup.journey.platform.moderation.infrastructure.persistence.mongo.repositories",
+        "com.levelup.journey.platform.user.infrastructure.persistence.mongo.repositories"
 })
 public class MongoConfiguration extends AbstractMongoClientConfiguration {
 
@@ -58,7 +59,8 @@ public class MongoConfiguration extends AbstractMongoClientConfiguration {
         return List.of(
                 "com.levelup.journey.platform.post.infrastructure.persistence.mongo.entities",
                 "com.levelup.journey.platform.social.infrastructure.persistence.mongo.entities",
-                "com.levelup.journey.platform.moderation.infrastructure.persistence.mongo.entities"
+                "com.levelup.journey.platform.moderation.infrastructure.persistence.mongo.entities",
+                "com.levelup.journey.platform.user.infrastructure.persistence.mongo.entities"
         );
     }
 }

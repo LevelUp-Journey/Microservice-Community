@@ -10,11 +10,6 @@ import org.hibernate.validator.constraints.URL;
  * Request payload for creating a new community
  */
 public record CreateCommunityResource(
-        @NotBlank(message = "El ID del propietario es obligatorio")
-        @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                message = "El ID del propietario debe ser un UUID válido")
-        String ownerId,
-
         @NotBlank(message = "El ID del perfil del propietario es obligatorio")
         @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
                 message = "El ID del perfil del propietario debe ser un UUID válido")

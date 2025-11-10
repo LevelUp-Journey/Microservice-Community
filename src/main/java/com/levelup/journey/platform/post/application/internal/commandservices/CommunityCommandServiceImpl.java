@@ -141,7 +141,7 @@ public class CommunityCommandServiceImpl implements CommunityCommandService {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                 if (authentication != null && authentication.getAuthorities() != null) {
                     boolean isAdmin = authentication.getAuthorities().stream()
-                        .anyMatch(authority -> "ADMIN".equals(authority.getAuthority()));
+                        .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
                     if (isAdmin) {
                         isAuthorized = true;
                         logger.debug("User {} is admin, allowing deletion", command.requesterId().value());

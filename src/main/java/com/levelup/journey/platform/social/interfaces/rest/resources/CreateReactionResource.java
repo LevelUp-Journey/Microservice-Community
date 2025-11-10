@@ -13,11 +13,6 @@ public record CreateReactionResource(
                 message = "El ID del post debe ser un UUID válido")
         String postId,
 
-        @NotBlank(message = "El ID del usuario es obligatorio")
-        @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                message = "El ID del usuario debe ser un UUID válido")
-        String userId,
-
         @NotBlank(message = "El tipo de reacción es obligatorio")
         @Pattern(regexp = "^LIKE$",
                 message = "El tipo de reacción debe ser: LIKE")

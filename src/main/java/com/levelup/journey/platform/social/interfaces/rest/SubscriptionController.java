@@ -26,6 +26,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,7 +54,7 @@ public class SubscriptionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('STUDENT') or hasAuthority('TEACHER')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT') or hasAuthority('ROLE_TEACHER') or hasAuthority('ROLE_ADMIN')")
     @Operation(summary = "Create a new subscription",
                description = "Subscribe a user to a community. Both students and teachers can subscribe to communities.")
     @ApiResponses(value = {
@@ -66,10 +68,17 @@ public class SubscriptionController {
             @ApiResponse(responseCode = "500", description = "Internal server error", content = @Content)
     })
     public ResponseEntity<SubscriptionResource> createSubscription(@Valid @RequestBody CreateSubscriptionResource resource) {
-        logger.info("Creating subscription: user {} to community {}", resource.userId(), resource.communityId());
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            logger.warn("Attempted to subscribe to community {} without a valid authenticated user", resource.communityId());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String userId = authentication.getName().trim();
+        logger.info("Creating subscription: user {} to community {}", userId, resource.communityId());
 
         try {
-            var command = CreateSubscriptionCommandFromResourceAssembler.toCommandFromResource(resource);
+            var command = CreateSubscriptionCommandFromResourceAssembler.toCommandFromResource(resource, userId);
             var subscription = subscriptionCommandService.handle(command);
 
             if (subscription.isEmpty()) {
@@ -158,7 +167,7 @@ public class SubscriptionController {
     }
 
     @DeleteMapping("/{subscriptionId}")
-    @PreAuthorize("hasAuthority('STUDENT') or hasAuthority('TEACHER')")
+    @PreAuthorize("hasAuthority('ROLE_STUDENT') or hasAuthority('ROLE_TEACHER')")
     @Operation(summary = "Delete a subscription", description = "Unsubscribe from a community. Both students and teachers can unsubscribe.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "204", description = "Subscription deleted successfully"),

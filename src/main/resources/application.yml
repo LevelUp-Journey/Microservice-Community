@@ -2,23 +2,15 @@ spring:
     application:
         name: community-service
 
-    # --- Configuración de Cassandra ---
-    cassandra:
-        contact-points: ${CASSANDRA_CONTACT_POINTS}
-        port: ${CASSANDRA_PORT}
-        keyspace-name: ${CASSANDRA_KEYSPACE:community_keyspace}
-        local-datacenter: ${CASSANDRA_DATACENTER:datacenter1}
-        schema-action: create_if_not_exists
-        username: ${CASSANDRA_USERNAME}
-        password: ${CASSANDRA_PASSWORD}
+    # --- Configuración de MongoDB ---
+    data:
+        mongodb:
+            uri: ${MONGODB_URI:mongodb://localhost:27017/community}
+            database: ${MONGODB_DATABASE:community_database}
 
     # --- Configuración de Kafka (Azure Event Hubs) ---
     kafka:
-        bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
-        properties:
-            security.protocol: SASL_SSL
-            sasl.mechanism: PLAIN
-            sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString" password="${KAFKA_CONNECTION_STRING}";'
+        bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
 
         consumer:
             key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -79,6 +71,7 @@ kafka:
         challenge-completed: challenge.completed
         post-created: post.created
         comment-created: comment.created
+        user-registered: community.registration
 
 # Configuration for Service Discovery
 eureka:
@@ -105,3 +98,15 @@ management:
     endpoint:
         health:
             show-details: always
+
+---
+spring:
+    config:
+        activate:
+            on-profile: eventhub
+    kafka:
+        bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+        properties:
+            security.protocol: SASL_SSL
+            sasl.mechanism: PLAIN
+            sasl.jaas.config: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="$ConnectionString" password="${KAFKA_CONNECTION_STRING}";'

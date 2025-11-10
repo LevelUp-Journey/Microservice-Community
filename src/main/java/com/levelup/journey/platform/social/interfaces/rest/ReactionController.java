@@ -25,6 +25,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -68,15 +70,22 @@ public class ReactionController {
                     content = @Content)
     })
     public ResponseEntity<ReactionResource> createReaction(@Valid @RequestBody CreateReactionResource resource) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            logger.warn("Attempted to create reaction for post {} without a valid authenticated user", resource.postId());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        String userId = authentication.getName().trim();
         logger.info("Creating reaction with postId: {}, userId: {}, type: {}",
-                resource.postId(), resource.userId(), resource.reactionType());
+                resource.postId(), userId, resource.reactionType());
 
         try {
-            var command = CreateReactionCommandFromResourceAssembler.toCommandFromResource(resource);
+            var command = CreateReactionCommandFromResourceAssembler.toCommandFromResource(resource, userId);
             var reaction = reactionCommandService.handle(command);
 
             if (reaction.isEmpty()) {
-                logger.warn("Failed to create reaction for post {} by user {} - service returned empty result", resource.postId(), resource.userId());
+                logger.warn("Failed to create reaction for post {} by user {} - service returned empty result", resource.postId(), userId);
                 return ResponseEntity.badRequest().build();
             }
 

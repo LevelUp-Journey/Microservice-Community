@@ -10,9 +10,9 @@ import com.levelup.journey.platform.social.interfaces.rest.resources.CreateSubsc
  */
 public class CreateSubscriptionCommandFromResourceAssembler {
 
-    public static CreateSubscriptionCommand toCommandFromResource(CreateSubscriptionResource resource) {
+    public static CreateSubscriptionCommand toCommandFromResource(CreateSubscriptionResource resource, String userId) {
         return new CreateSubscriptionCommand(
-                UserId.of(resource.userId()),
+                UserId.of(userId),
                 CommunityId.of(resource.communityId())
         );
     }

@@ -30,6 +30,6 @@ public class CommunityApplication implements CommandLineRunner, WebMvcConfigurer
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addRedirectViewController("/", "/swagger-ui/index.html");
+        registry.addRedirectViewController("/", "/swcommunity-serviceagger-ui/index.html");
     }
 }

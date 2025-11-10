@@ -81,7 +81,7 @@ public class PostCommandServiceImpl implements PostCommandService {
                 Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                 if (authentication != null && authentication.getAuthorities() != null) {
                     boolean isTeacher = authentication.getAuthorities().stream()
-                        .anyMatch(authority -> "TEACHER".equals(authority.getAuthority()));
+                        .anyMatch(authority -> "ROLE_TEACHER".equals(authority.getAuthority()));
 
                     if (isTeacher) {
                         // Check if teacher is subscribed to this community
@@ -359,7 +359,7 @@ public class PostCommandServiceImpl implements PostCommandService {
                     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
                     if (authentication != null && authentication.getAuthorities() != null) {
                         boolean isAdmin = authentication.getAuthorities().stream()
-                            .anyMatch(authority -> "ADMIN".equals(authority.getAuthority()));
+                            .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
                         if (isAdmin) {
                             isAuthorized = true;
                             logger.debug("User {} is admin, allowing deletion", command.requesterId());

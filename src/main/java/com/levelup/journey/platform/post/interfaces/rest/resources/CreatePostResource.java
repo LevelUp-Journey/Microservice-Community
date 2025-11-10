@@ -15,11 +15,6 @@ public record CreatePostResource(
                 message = "El ID de la comunidad debe ser un UUID válido")
         String communityId,
 
-        @NotBlank(message = "El ID del autor es obligatorio")
-        @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
-                message = "El ID del autor debe ser un UUID válido")
-        String authorId,
-
         @NotBlank(message = "El ID del perfil del autor es obligatorio")
         @Pattern(regexp = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
                 message = "El ID del perfil del autor debe ser un UUID válido")
