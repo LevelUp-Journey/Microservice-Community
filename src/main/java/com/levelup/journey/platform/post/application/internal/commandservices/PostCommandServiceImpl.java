@@ -7,7 +7,6 @@ import com.levelup.journey.platform.post.domain.model.queries.GetCommunityByIdQu
 import com.levelup.journey.platform.post.domain.model.repositories.PostRepository;
 import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
 import com.levelup.journey.platform.post.domain.services.*;
-import com.levelup.journey.platform.shared.domain.acl.ContentModerationService;
 import com.levelup.journey.platform.shared.domain.acl.SocialRelationshipService;
 import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
 import org.slf4j.Logger;
@@ -33,20 +32,17 @@ public class PostCommandServiceImpl implements PostCommandService {
     private final CommunityQueryService communityQueryService;
     private final CommentCommandService commentCommandService;
     private final CommentQueryService commentQueryService;
-    private final ContentModerationService contentModerationService;
     private final SocialRelationshipService socialRelationshipService;
 
     public PostCommandServiceImpl(PostRepository postRepository,
                                   CommunityQueryService communityQueryService,
                                   CommentCommandService commentCommandService,
                                   CommentQueryService commentQueryService,
-                                  ContentModerationService contentModerationService,
                                   SocialRelationshipService socialRelationshipService) {
         this.postRepository = postRepository;
         this.communityQueryService = communityQueryService;
         this.commentCommandService = commentCommandService;
         this.commentQueryService = commentQueryService;
-        this.contentModerationService = contentModerationService;
         this.socialRelationshipService = socialRelationshipService;
     }
 
@@ -128,25 +124,6 @@ public class PostCommandServiceImpl implements PostCommandService {
             // Save post
             Post savedPost = postRepository.save(post);
             logger.info("Post published and saved successfully with ID: {}", savedPost.id());
-
-            // Analyze content for moderation
-            try {
-                String fullContent = command.title() + " " + command.content();
-                String reportId = contentModerationService.analyzeContent(
-                    savedPost.id().value(),
-                    command.authorId().value(),
-                    fullContent
-                );
-
-                if (reportId != null) {
-                    logger.warn("Suspicious content detected in post {}. Report created with ID: {}",
-                              savedPost.id(), reportId);
-                }
-            } catch (Exception e) {
-                logger.error("Error analyzing content for moderation in post {}: {}",
-                           savedPost.id(), e.getMessage());
-                // Don't fail the post creation if moderation analysis fails
-            }
 
             return Optional.of(savedPost);
 
