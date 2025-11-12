@@ -12,10 +12,12 @@ public class CreatePostCommandFromResourceAssembler {
 
     public static PublishPostCommand toCommandFromResource(CreatePostResource resource, String authorId) {
         String imageUrl = resource.imageUrl() != null ? resource.imageUrl().toString() : null;
+        // Normalize line breaks to Unix format (\n) to ensure consistent handling
+        String normalizedContent = resource.content().replaceAll("\\r\\n", "\n").replaceAll("\\r", "\n");
         return new PublishPostCommand(
                 CommunityId.of(resource.communityId()),
                 UserId.of(authorId),
-                resource.content(),
+                normalizedContent,
                 imageUrl
         );
     }
