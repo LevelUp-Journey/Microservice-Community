@@ -1,7 +1,9 @@
 package com.levelup.journey.platform.social.application.internal.commandservices;
 
 import com.levelup.journey.platform.social.domain.model.aggregates.Reaction;
+import com.levelup.journey.platform.social.domain.model.commands.AddReactionCommand;
 import com.levelup.journey.platform.social.domain.model.commands.CreateReactionCommand;
+import com.levelup.journey.platform.social.domain.model.commands.RemoveReactionByUserAndPostCommand;
 import com.levelup.journey.platform.social.domain.model.commands.RemoveReactionCommand;
 import com.levelup.journey.platform.social.domain.model.repositories.ReactionRepository;
 import com.levelup.journey.platform.social.domain.services.ReactionCommandService;
@@ -72,6 +74,49 @@ public class ReactionCommandServiceImpl implements ReactionCommandService {
     }
 
     @Override
+    public Optional<Reaction> handle(AddReactionCommand command) {
+        logger.info("Processing AddReactionCommand for postId: {}, userId: {}, type: {}",
+                command.postId(), command.userId(), command.reactionType());
+
+        try {
+            // Check if user has already reacted to this post
+            var existingReaction = reactionRepository.findByPostIdAndUserId(command.postId(), command.userId());
+
+            if (existingReaction.isPresent()) {
+                logger.warn("User {} already has a reaction on post {}. Cannot add another reaction.",
+                        command.userId(), command.postId());
+                throw new IllegalStateException("User already has a reaction on this post");
+            }
+
+            // CREATE: User hasn't reacted, create new reaction
+            Reaction reaction = Reaction.create(
+                    command.postId(),
+                    command.userId(),
+                    command.reactionType()
+            );
+
+            // Save reaction
+            Reaction savedReaction = reactionRepository.save(reaction);
+            logger.info("Reaction added successfully with ID: {}", savedReaction.id());
+
+            return Optional.of(savedReaction);
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Validation error in AddReactionCommand for postId: {} and userId: {} - {}",
+                    command.postId(), command.userId(), e.getMessage());
+            throw e;
+        } catch (IllegalStateException e) {
+            logger.error("State error in AddReactionCommand for postId: {} and userId: {} - {}",
+                    command.postId(), command.userId(), e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Unexpected error processing AddReactionCommand for postId: {} and userId: {}",
+                    command.postId(), command.userId(), e);
+            return Optional.empty();
+        }
+    }
+
+    @Override
     public boolean handle(RemoveReactionCommand command) {
         logger.info("Processing RemoveReactionCommand for reaction ID: {}", command.id());
 
@@ -91,6 +136,32 @@ public class ReactionCommandServiceImpl implements ReactionCommandService {
 
         } catch (Exception e) {
             logger.error("Unexpected error processing RemoveReactionCommand for ID: {}", command.id(), e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean handle(RemoveReactionByUserAndPostCommand command) {
+        logger.info("Processing RemoveReactionByUserAndPostCommand for postId: {}, userId: {}",
+                command.postId(), command.userId());
+
+        try {
+            // Check if reaction exists
+            var existingReaction = reactionRepository.findByPostIdAndUserId(command.postId(), command.userId());
+            if (existingReaction.isEmpty()) {
+                logger.warn("Attempted to remove non-existent reaction for user {} on post {}", command.userId(), command.postId());
+                return false;
+            }
+
+            // Delete reaction
+            reactionRepository.deleteById(existingReaction.get().id());
+            logger.info("Reaction removed successfully for user {} on post {}", command.userId(), command.postId());
+
+            return true;
+
+        } catch (Exception e) {
+            logger.error("Unexpected error processing RemoveReactionByUserAndPostCommand for postId: {} and userId: {}",
+                    command.postId(), command.userId(), e);
             return false;
         }
     }
