@@ -1,9 +1,7 @@
 package com.levelup.journey.platform.social.interfaces.rest;
 
 import com.levelup.journey.platform.social.domain.model.commands.RemoveFollowCommand;
-import com.levelup.journey.platform.social.domain.model.queries.GetFollowByIdQuery;
-import com.levelup.journey.platform.social.domain.model.queries.GetFollowersByUserIdQuery;
-import com.levelup.journey.platform.social.domain.model.queries.GetFollowingByUserIdQuery;
+import com.levelup.journey.platform.social.domain.model.queries.GetFollowerCountQuery;
 import com.levelup.journey.platform.social.domain.model.valueobjects.FollowId;
 import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.social.domain.services.FollowCommandService;
@@ -27,9 +25,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Follow Controller
@@ -92,69 +87,19 @@ public class FollowController {
         }
     }
 
-    @GetMapping("/{followId}")
-    @Operation(summary = "Get follow by ID")
+    @GetMapping("/{userId}")
+    @Operation(summary = "Get follower count for user")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Follow found",
+            @ApiResponse(responseCode = "200", description = "Follower count retrieved",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = FollowResource.class))),
-            @ApiResponse(responseCode = "404", description = "Follow not found", content = @Content)
+                            schema = @Schema(implementation = Long.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid user ID", content = @Content)
     })
-    public ResponseEntity<FollowResource> getFollowById(@PathVariable String followId) {
+    public ResponseEntity<Long> getFollowerCount(@PathVariable String userId) {
         try {
-            var query = new GetFollowByIdQuery(FollowId.of(followId));
-            var follow = followQueryService.handle(query);
-
-            if (follow.isEmpty()) {
-                return ResponseEntity.notFound().build();
-            }
-
-            var followResource = FollowResourceFromEntityAssembler.toResourceFromEntity(follow.get());
-            return ResponseEntity.ok(followResource);
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @GetMapping("/followers/{userId}")
-    @Operation(summary = "Get user's followers",
-               description = "Retrieve all users following a specific user")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Followers retrieved successfully")
-    })
-    public ResponseEntity<List<FollowResource>> getFollowers(@PathVariable String userId) {
-        try {
-            var query = new GetFollowersByUserIdQuery(UserId.of(userId));
-            var follows = followQueryService.handle(query);
-
-            var followResources = follows.stream()
-                    .map(FollowResourceFromEntityAssembler::toResourceFromEntity)
-                    .collect(Collectors.toList());
-
-            return ResponseEntity.ok(followResources);
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    @GetMapping("/following/{userId}")
-    @Operation(summary = "Get users being followed",
-               description = "Retrieve all users that a specific user is following")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Following list retrieved successfully")
-    })
-    public ResponseEntity<List<FollowResource>> getFollowing(@PathVariable String userId) {
-        try {
-            var query = new GetFollowingByUserIdQuery(UserId.of(userId));
-            var follows = followQueryService.handle(query);
-
-            var followResources = follows.stream()
-                    .map(FollowResourceFromEntityAssembler::toResourceFromEntity)
-                    .collect(Collectors.toList());
-
-            return ResponseEntity.ok(followResources);
+            var query = new GetFollowerCountQuery(UserId.of(userId));
+            long count = followQueryService.handle(query);
+            return ResponseEntity.ok(count);
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();

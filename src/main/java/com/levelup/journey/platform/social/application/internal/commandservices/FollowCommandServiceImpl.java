@@ -2,6 +2,7 @@ package com.levelup.journey.platform.social.application.internal.commandservices
 
 import com.levelup.journey.platform.social.domain.model.aggregates.Follow;
 import com.levelup.journey.platform.social.domain.model.commands.CreateFollowCommand;
+import com.levelup.journey.platform.social.domain.model.commands.RemoveFollowByUsersCommand;
 import com.levelup.journey.platform.social.domain.model.commands.RemoveFollowCommand;
 import com.levelup.journey.platform.social.domain.model.repositories.FollowRepository;
 import com.levelup.journey.platform.social.domain.model.valueobjects.FollowId;
@@ -92,6 +93,33 @@ public class FollowCommandServiceImpl implements FollowCommandService {
 
         } catch (Exception e) {
             logger.error("Unexpected error processing RemoveFollowCommand for ID: {}", command.id(), e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean handle(RemoveFollowByUsersCommand command) {
+        logger.info("Processing RemoveFollowByUsersCommand for follower: {}, following: {}",
+                command.followerId(), command.followingId());
+
+        try {
+            // Check if follow exists
+            var existingFollow = followRepository.findByFollowerIdAndFollowingId(command.followerId(), command.followingId());
+            if (existingFollow.isEmpty()) {
+                logger.warn("Attempted to remove non-existent follow relationship between {} and {}",
+                        command.followerId(), command.followingId());
+                return false;
+            }
+
+            // Delete follow
+            followRepository.deleteById(existingFollow.get().id());
+            logger.info("Follow removed successfully between {} and {}", command.followerId(), command.followingId());
+
+            return true;
+
+        } catch (Exception e) {
+            logger.error("Unexpected error processing RemoveFollowByUsersCommand for follower: {} and following: {}",
+                    command.followerId(), command.followingId(), e);
             return false;
         }
     }

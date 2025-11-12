@@ -3,8 +3,6 @@ package com.levelup.journey.platform.social.interfaces.rest;
 import com.levelup.journey.platform.social.domain.model.commands.AddReactionCommand;
 import com.levelup.journey.platform.social.domain.model.commands.RemoveReactionByUserAndPostCommand;
 import com.levelup.journey.platform.social.domain.model.queries.GetReactionByUserAndPostQuery;
-import com.levelup.journey.platform.social.domain.model.queries.GetReactionsByPostIdQuery;
-import com.levelup.journey.platform.social.domain.model.queries.GetReactionsByUserIdQuery;
 import com.levelup.journey.platform.social.domain.model.valueobjects.PostId;
 import com.levelup.journey.platform.social.domain.model.valueobjects.ReactionType;
 import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
@@ -24,9 +22,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Reaction Controller
@@ -93,72 +88,6 @@ public class ReactionController {
         } catch (Exception e) {
             logger.error("Unexpected error adding like for user: {} on post: {}", userId, postId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    /**
-     * Get all reactions for a post
-     */
-    @GetMapping("/post/{postId}")
-    @Operation(summary = "Get reactions by post ID",
-               description = "Retrieve all reactions for a specific post")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Reactions retrieved successfully",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ReactionResource.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid post ID format",
-                    content = @Content)
-    })
-    public ResponseEntity<List<ReactionResource>> getReactionsByPost(@PathVariable String postId) {
-        logger.info("Getting reactions for post: {}", postId);
-
-        try {
-            var query = new GetReactionsByPostIdQuery(PostId.of(postId));
-            var reactions = reactionQueryService.handle(query);
-
-            var reactionResources = reactions.stream()
-                    .map(ReactionResourceFromEntityAssembler::toResourceFromEntity)
-                    .collect(Collectors.toList());
-
-            logger.info("Found {} reactions for post: {}", reactionResources.size(), postId);
-            return ResponseEntity.ok(reactionResources);
-
-        } catch (IllegalArgumentException e) {
-            logger.error("Invalid post ID format: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
-    /**
-     * Get all reactions by a user
-     */
-    @GetMapping("/user/{userId}")
-    @Operation(summary = "Get reactions by user ID",
-               description = "Retrieve all reactions made by a specific user")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Reactions retrieved successfully",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ReactionResource.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid user ID format",
-                    content = @Content)
-    })
-    public ResponseEntity<List<ReactionResource>> getReactionsByUser(@PathVariable String userId) {
-        logger.info("Getting reactions for user: {}", userId);
-
-        try {
-            var query = new GetReactionsByUserIdQuery(UserId.of(userId));
-            var reactions = reactionQueryService.handle(query);
-
-            var reactionResources = reactions.stream()
-                    .map(ReactionResourceFromEntityAssembler::toResourceFromEntity)
-                    .collect(Collectors.toList());
-
-            logger.info("Found {} reactions for user: {}", reactionResources.size(), userId);
-            return ResponseEntity.ok(reactionResources);
-
-        } catch (IllegalArgumentException e) {
-            logger.error("Invalid user ID format: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
         }
     }
 
