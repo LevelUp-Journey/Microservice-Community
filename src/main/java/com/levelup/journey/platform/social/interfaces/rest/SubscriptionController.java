@@ -89,7 +89,7 @@ public class SubscriptionController {
                 return ResponseEntity.badRequest().build();
             }
 
-            var subscriptionResource = SubscriptionResourceFromEntityAssembler.toResourceFromEntity(subscription.get());
+            var subscriptionResource = SubscriptionResourceFromEntityAssembler.toResourceFromEntity(subscription.get(), communityService);
             return new ResponseEntity<>(subscriptionResource, HttpStatus.CREATED);
 
         } catch (IllegalArgumentException e) {
@@ -118,7 +118,7 @@ public class SubscriptionController {
                 return ResponseEntity.notFound().build();
             }
 
-            var subscriptionResource = SubscriptionResourceFromEntityAssembler.toResourceFromEntity(subscription.get());
+            var subscriptionResource = SubscriptionResourceFromEntityAssembler.toResourceFromEntity(subscription.get(), communityService);
             return ResponseEntity.ok(subscriptionResource);
 
         } catch (IllegalArgumentException e) {
@@ -138,18 +138,7 @@ public class SubscriptionController {
             var subscriptions = subscriptionQueryService.handle(query);
 
             var subscriptionResources = subscriptions.stream()
-                    .map(subscription -> {
-                        String communityName = communityService.getCommunityName(subscription.communityId().value());
-                        String communityImageUrl = communityService.getCommunityImageUrl(subscription.communityId().value());
-                        return new SubscriptionResource(
-                                subscription.id().value(),
-                                subscription.userId().value(),
-                                subscription.communityId().value(),
-                                communityName,
-                                communityImageUrl,
-                                subscription.createdAt()
-                        );
-                    })
+                    .map(subscription -> SubscriptionResourceFromEntityAssembler.toResourceFromEntity(subscription, communityService))
                     .collect(Collectors.toList());
 
             return ResponseEntity.ok(subscriptionResources);
@@ -171,7 +160,7 @@ public class SubscriptionController {
             var subscriptions = subscriptionQueryService.handle(query);
 
             var subscriptionResources = subscriptions.stream()
-                    .map(SubscriptionResourceFromEntityAssembler::toResourceFromEntity)
+                    .map(subscription -> SubscriptionResourceFromEntityAssembler.toResourceFromEntity(subscription, communityService))
                     .collect(Collectors.toList());
 
             return ResponseEntity.ok(subscriptionResources);
