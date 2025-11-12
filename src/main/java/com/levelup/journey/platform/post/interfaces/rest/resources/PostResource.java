@@ -11,6 +11,8 @@ public record PostResource(
         String communityId,
         String authorId,
         String authorProfileId,
+        String authorName,
+        String authorProfileUrl,
         String content,
         String imageUrl,
         Instant createdAt,

@@ -3,8 +3,9 @@ package com.levelup.journey.platform.social.domain.services;
 import com.levelup.journey.platform.social.domain.model.aggregates.Reaction;
 import com.levelup.journey.platform.social.domain.model.commands.AddReactionCommand;
 import com.levelup.journey.platform.social.domain.model.commands.CreateReactionCommand;
-import com.levelup.journey.platform.social.domain.model.commands.RemoveReactionByUserAndPostCommand;
 import com.levelup.journey.platform.social.domain.model.commands.RemoveReactionCommand;
+import com.levelup.journey.platform.social.domain.model.commands.RemoveReactionByUserAndPostCommand;
+import com.levelup.journey.platform.social.domain.model.commands.RemoveReactionsByPostCommand;
 
 import java.util.Optional;
 
@@ -43,4 +44,11 @@ public interface ReactionCommandService {
      * @return true if removed successfully
      */
     boolean handle(RemoveReactionByUserAndPostCommand command);
+
+    /**
+     * Handles the command to remove all reactions for a post
+     * @param command the remove reactions by post command
+     * @return true if removed successfully
+     */
+    boolean handle(RemoveReactionsByPostCommand command);
 }

@@ -45,7 +45,7 @@ public final class Post extends AggregateRoot {
      * @param communityId community identifier
      * @param authorId author identifier
      * @param authorProfileId author profile identifier
-     * @param content post content (supports Markdown)
+     * @param content post content (supports Markdown and line breaks)
      * @param imageUrl optional image URL
      * @param createdAt creation timestamp
      * @return restored Post aggregate

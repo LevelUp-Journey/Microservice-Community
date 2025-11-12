@@ -51,7 +51,10 @@ public class UserRepositoryAdapter implements UserRepository {
                 user.getUserId().value(), // Using userId as MongoDB _id
                 user.getUserId().value(),
                 user.getProfileId().value(),
-                user.getCreatedAt()
+                user.getUsername(),
+                user.getProfileUrl(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
         );
     }
 
@@ -59,7 +62,10 @@ public class UserRepositoryAdapter implements UserRepository {
         return User.restore(
                 UserId.of(entity.getUserId()),
                 ProfileId.of(entity.getProfileId()),
-                entity.getCreatedAt()
+                entity.getUsername(),
+                entity.getProfileUrl(),
+                entity.getCreatedAt(),
+                entity.getUpdatedAt()
         );
     }
 }

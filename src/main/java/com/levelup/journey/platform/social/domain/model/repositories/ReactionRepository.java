@@ -18,4 +18,5 @@ public interface ReactionRepository {
     List<Reaction> findByUserId(UserId userId);
     Optional<Reaction> findByPostIdAndUserId(PostId postId, UserId userId);
     void deleteById(ReactionId id);
+    void deleteByPostId(PostId postId);
 }
