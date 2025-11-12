@@ -20,4 +20,6 @@ public interface ReactionMongoRepository extends MongoRepository<ReactionEntity,
     Optional<ReactionEntity> findByPostIdAndUserId(String postId, String userId);
 
     void deleteByPostIdAndUserId(String postId, String userId);
+
+    void deleteByPostId(String postId);
 }

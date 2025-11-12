@@ -3,8 +3,9 @@ package com.levelup.journey.platform.social.application.internal.commandservices
 import com.levelup.journey.platform.social.domain.model.aggregates.Reaction;
 import com.levelup.journey.platform.social.domain.model.commands.AddReactionCommand;
 import com.levelup.journey.platform.social.domain.model.commands.CreateReactionCommand;
-import com.levelup.journey.platform.social.domain.model.commands.RemoveReactionByUserAndPostCommand;
 import com.levelup.journey.platform.social.domain.model.commands.RemoveReactionCommand;
+import com.levelup.journey.platform.social.domain.model.commands.RemoveReactionByUserAndPostCommand;
+import com.levelup.journey.platform.social.domain.model.commands.RemoveReactionsByPostCommand;
 import com.levelup.journey.platform.social.domain.model.repositories.ReactionRepository;
 import com.levelup.journey.platform.social.domain.services.ReactionCommandService;
 import org.slf4j.Logger;
@@ -162,6 +163,24 @@ public class ReactionCommandServiceImpl implements ReactionCommandService {
         } catch (Exception e) {
             logger.error("Unexpected error processing RemoveReactionByUserAndPostCommand for postId: {} and userId: {}",
                     command.postId(), command.userId(), e);
+            return false;
+        }
+    }
+
+    @Override
+    public boolean handle(RemoveReactionsByPostCommand command) {
+        logger.info("Processing RemoveReactionsByPostCommand for postId: {}", command.postId());
+
+        try {
+            // Delete all reactions for the post
+            reactionRepository.deleteByPostId(command.postId());
+            logger.info("All reactions removed successfully for post {}", command.postId());
+
+            return true;
+
+        } catch (Exception e) {
+            logger.error("Unexpected error processing RemoveReactionsByPostCommand for postId: {}",
+                    command.postId(), e);
             return false;
         }
     }

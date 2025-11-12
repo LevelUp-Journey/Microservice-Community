@@ -5,6 +5,7 @@ import com.levelup.journey.platform.post.interfaces.rest.resources.PostResource;
 import com.levelup.journey.platform.post.interfaces.rest.resources.ReactionSummaryResource;
 import com.levelup.journey.platform.social.domain.model.queries.GetReactionsByPostIdQuery;
 import com.levelup.journey.platform.social.domain.model.valueobjects.PostId;
+import com.levelup.journey.platform.post.application.internal.outboundservices.acl.ExternalUserService;
 import com.levelup.journey.platform.social.domain.services.ReactionQueryService;
 import org.springframework.stereotype.Component;
 
@@ -19,9 +20,12 @@ import java.util.stream.Collectors;
 public class PostResourceFromEntityAssembler {
 
     private final ReactionQueryService reactionQueryService;
+    private final ExternalUserService externalUserService;
 
-    public PostResourceFromEntityAssembler(ReactionQueryService reactionQueryService) {
+    public PostResourceFromEntityAssembler(ReactionQueryService reactionQueryService,
+                                         ExternalUserService externalUserService) {
         this.reactionQueryService = reactionQueryService;
+        this.externalUserService = externalUserService;
     }
 
     /**
@@ -66,11 +70,17 @@ public class PostResourceFromEntityAssembler {
                 userReaction
         );
 
+        // Fetch author data from user context
+        String authorName = externalUserService.fetchUsernameByUserId(entity.authorId().value());
+        String authorProfileUrl = externalUserService.fetchProfileUrlByUserId(entity.authorId().value());
+
         return new PostResource(
                 entity.id().value(),
                 entity.communityId().value(),
                 entity.authorId().value(),
                 entity.authorProfileId().value(),
+                authorName,
+                authorProfileUrl,
                 entity.content(),
                 entity.imageUrl().isEmpty() ? null : entity.imageUrl().url(),
                 entity.createdAt(),

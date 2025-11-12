@@ -12,6 +12,8 @@ import com.levelup.journey.platform.post.domain.services.CommunityQueryService;
 import com.levelup.journey.platform.post.domain.services.PostCommandService;
 import com.levelup.journey.platform.shared.domain.acl.SocialRelationshipService;
 import com.levelup.journey.platform.shared.domain.acl.UserDirectoryService;
+import com.levelup.journey.platform.social.domain.services.ReactionCommandService;
+import com.levelup.journey.platform.social.domain.model.commands.RemoveReactionsByPostCommand;
 import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,15 +37,18 @@ public class PostCommandServiceImpl implements PostCommandService {
     private final CommunityQueryService communityQueryService;
     private final SocialRelationshipService socialRelationshipService;
     private final UserDirectoryService userDirectoryService;
+    private final ReactionCommandService reactionCommandService;
 
     public PostCommandServiceImpl(PostRepository postRepository,
                                   CommunityQueryService communityQueryService,
                                   SocialRelationshipService socialRelationshipService,
-                                  UserDirectoryService userDirectoryService) {
+                                  UserDirectoryService userDirectoryService,
+                                  ReactionCommandService reactionCommandService) {
         this.postRepository = postRepository;
         this.communityQueryService = communityQueryService;
         this.socialRelationshipService = socialRelationshipService;
         this.userDirectoryService = userDirectoryService;
+        this.reactionCommandService = reactionCommandService;
     }
 
     @Override
@@ -192,6 +197,14 @@ public class PostCommandServiceImpl implements PostCommandService {
                 logger.warn("User {} attempted to delete post {} but lacks permission", 
                            command.requesterId(), command.postId());
                 throw new IllegalArgumentException("No tienes permiso para eliminar este post. Solo el autor, el propietario de la comunidad o un administrador pueden eliminar posts.");
+            }
+
+            // Delete all reactions for this post first
+            var removeReactionsCommand = new RemoveReactionsByPostCommand(new com.levelup.journey.platform.social.domain.model.valueobjects.PostId(command.postId().value()));
+            boolean reactionsDeleted = reactionCommandService.handle(removeReactionsCommand);
+            if (!reactionsDeleted) {
+                logger.warn("Failed to delete reactions for post: {}", command.postId());
+                // Continue with post deletion even if reactions deletion fails
             }
 
             // Delete the post

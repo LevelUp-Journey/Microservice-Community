@@ -64,6 +64,11 @@ public class ReactionRepositoryAdapter implements ReactionRepository {
         mongoRepository.deleteById(id.value());
     }
 
+    @Override
+    public void deleteByPostId(PostId postId) {
+        mongoRepository.deleteByPostId(postId.value());
+    }
+
     private ReactionEntity toEntity(Reaction reaction) {
         return new ReactionEntity(
                 reaction.id().value(),
