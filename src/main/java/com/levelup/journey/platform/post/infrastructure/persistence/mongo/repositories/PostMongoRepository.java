@@ -15,4 +15,5 @@ public interface PostMongoRepository extends MongoRepository<PostEntity, String>
 
     List<PostEntity> findByCommunityIdOrderByCreatedAtDesc(String communityId, Pageable pageable);
     List<PostEntity> findAllByOrderByCreatedAtDesc(Pageable pageable);
+    long countByCommunityId(String communityId);
 }

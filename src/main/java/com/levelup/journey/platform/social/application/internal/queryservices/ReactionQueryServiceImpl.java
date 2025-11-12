@@ -2,6 +2,7 @@ package com.levelup.journey.platform.social.application.internal.queryservices;
 
 import com.levelup.journey.platform.social.domain.model.aggregates.Reaction;
 import com.levelup.journey.platform.social.domain.model.queries.GetReactionByIdQuery;
+import com.levelup.journey.platform.social.domain.model.queries.GetReactionByUserAndPostQuery;
 import com.levelup.journey.platform.social.domain.model.queries.GetReactionsByPostIdQuery;
 import com.levelup.journey.platform.social.domain.model.queries.GetReactionsByUserIdQuery;
 import com.levelup.journey.platform.social.domain.model.repositories.ReactionRepository;
@@ -37,5 +38,10 @@ public class ReactionQueryServiceImpl implements ReactionQueryService {
     @Override
     public List<Reaction> handle(GetReactionsByUserIdQuery query) {
         return reactionRepository.findByUserId(query.userId());
+    }
+
+    @Override
+    public Optional<Reaction> handle(GetReactionByUserAndPostQuery query) {
+        return reactionRepository.findByPostIdAndUserId(query.postId(), query.userId());
     }
 }

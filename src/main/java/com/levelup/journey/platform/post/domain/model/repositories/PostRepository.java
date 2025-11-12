@@ -13,7 +13,9 @@ public interface PostRepository {
     Optional<Post> findById(PostId id);
     List<Post> findAll();
     List<Post> findAll(int page, int size);
+    long count();
     List<Post> findByCommunityId(CommunityId communityId, int page, int size);
+    long countByCommunityId(CommunityId communityId);
     void deleteById(PostId id);
 }
 

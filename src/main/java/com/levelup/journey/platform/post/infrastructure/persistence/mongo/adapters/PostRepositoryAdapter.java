@@ -67,6 +67,16 @@ public class PostRepositoryAdapter implements PostRepository {
     }
 
     @Override
+    public long count() {
+        return mongoRepository.count();
+    }
+
+    @Override
+    public long countByCommunityId(CommunityId communityId) {
+        return mongoRepository.countByCommunityId(communityId.value());
+    }
+
+    @Override
     public void deleteById(PostId id) {
         mongoRepository.deleteById(id.value());
     }

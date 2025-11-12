@@ -5,6 +5,7 @@ import com.levelup.journey.platform.post.domain.model.queries.GetAllPostsQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetPostByIdQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetPostsByCommunityIdQuery;
 import com.levelup.journey.platform.post.domain.model.repositories.PostRepository;
+import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.services.PostQueryService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,5 +44,24 @@ public class PostQueryServiceImpl implements PostQueryService {
     public List<Post> handle(GetPostsByCommunityIdQuery query) {
         // Use paginated repository method (sorting is handled by MongoDB query)
         return postRepository.findByCommunityId(query.communityId(), query.page(), query.size());
+    }
+
+    /**
+     * Get total count of all posts
+     * @return total number of posts
+     */
+    @Transactional(readOnly = true)
+    public long countAllPosts() {
+        return postRepository.count();
+    }
+
+    /**
+     * Get total count of posts by community ID
+     * @param communityId the community identifier
+     * @return total number of posts in the community
+     */
+    @Transactional(readOnly = true)
+    public long countPostsByCommunity(CommunityId communityId) {
+        return postRepository.countByCommunityId(communityId);
     }
 }

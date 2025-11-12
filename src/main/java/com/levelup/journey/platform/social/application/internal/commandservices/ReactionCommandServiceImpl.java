@@ -28,18 +28,26 @@ public class ReactionCommandServiceImpl implements ReactionCommandService {
 
     @Override
     public Optional<Reaction> handle(CreateReactionCommand command) {
-        logger.info("Processing CreateReactionCommand for postId: {}, userId: {}, type: {}",
+        logger.info("Processing CreateReactionCommand (toggle) for postId: {}, userId: {}, type: {}",
                 command.postId(), command.userId(), command.reactionType());
 
         try {
             // Check if user has already reacted to this post
-            var userReaction = reactionRepository.findByPostIdAndUserId(command.postId(), command.userId());
-            if (userReaction.isPresent()) {
-                logger.warn("User {} has already reacted to post {}", command.userId(), command.postId());
-                throw new IllegalArgumentException("El usuario ya ha reaccionado a este post");
+            var existingReaction = reactionRepository.findByPostIdAndUserId(command.postId(), command.userId());
+
+            if (existingReaction.isPresent()) {
+                // TOGGLE: User already reacted, remove the existing reaction
+                logger.info("User {} already has a reaction on post {}. Removing existing reaction with ID: {}",
+                        command.userId(), command.postId(), existingReaction.get().id());
+
+                reactionRepository.deleteById(existingReaction.get().id());
+                logger.info("Reaction removed successfully (toggle) with ID: {}", existingReaction.get().id());
+
+                // Return empty to indicate removal
+                return Optional.empty();
             }
 
-            // Create new reaction
+            // CREATE: User hasn't reacted, create new reaction
             Reaction reaction = Reaction.create(
                     command.postId(),
                     command.userId(),
@@ -53,11 +61,11 @@ public class ReactionCommandServiceImpl implements ReactionCommandService {
             return Optional.of(savedReaction);
 
         } catch (IllegalArgumentException e) {
-            logger.error("Validation error in CreateReactionCommand for postId: {} and userId: {} - {}", 
+            logger.error("Validation error in CreateReactionCommand for postId: {} and userId: {} - {}",
                     command.postId(), command.userId(), e.getMessage());
             throw e;
         } catch (Exception e) {
-            logger.error("Unexpected error processing CreateReactionCommand for postId: {} and userId: {}", 
+            logger.error("Unexpected error processing CreateReactionCommand for postId: {} and userId: {}",
                     command.postId(), command.userId(), e);
             return Optional.empty();
         }

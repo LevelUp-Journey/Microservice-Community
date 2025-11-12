@@ -2,6 +2,7 @@ package com.levelup.journey.platform.social.domain.services;
 
 import com.levelup.journey.platform.social.domain.model.aggregates.Reaction;
 import com.levelup.journey.platform.social.domain.model.queries.GetReactionByIdQuery;
+import com.levelup.journey.platform.social.domain.model.queries.GetReactionByUserAndPostQuery;
 import com.levelup.journey.platform.social.domain.model.queries.GetReactionsByPostIdQuery;
 import com.levelup.journey.platform.social.domain.model.queries.GetReactionsByUserIdQuery;
 
@@ -34,4 +35,11 @@ public interface ReactionQueryService {
      * @return list of reactions made by the user
      */
     List<Reaction> handle(GetReactionsByUserIdQuery query);
+
+    /**
+     * Handles the query to get a reaction by user ID and post ID
+     * @param query the get reaction by user and post query
+     * @return the reaction if found
+     */
+    Optional<Reaction> handle(GetReactionByUserAndPostQuery query);
 }
