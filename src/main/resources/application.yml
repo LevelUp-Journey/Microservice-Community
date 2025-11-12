@@ -72,6 +72,7 @@ kafka:
         post-created: post.created
         comment-created: comment.created
         user-registered: community.registration
+        profile-updated: community.profile.updated
 
 # Configuration for Service Discovery
 eureka:

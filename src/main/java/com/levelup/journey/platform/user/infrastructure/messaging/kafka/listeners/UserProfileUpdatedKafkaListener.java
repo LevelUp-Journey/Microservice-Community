@@ -1,6 +1,6 @@
 package com.levelup.journey.platform.user.infrastructure.messaging.kafka.listeners;
 
-import com.levelup.journey.platform.user.domain.model.commands.RegisterUserCommand;
+import com.levelup.journey.platform.user.domain.model.commands.UpdateUserProfileCommand;
 import com.levelup.journey.platform.user.domain.services.UserCommandService;
 import com.levelup.journey.platform.user.infrastructure.messaging.kafka.events.UserRegistrationKafkaEvent;
 import org.slf4j.Logger;
@@ -12,42 +12,33 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 /**
- * Kafka listener for user registration events
- * Listens to the user.registered topic and processes incoming events
+ * Kafka listener that keeps cached user data in sync with the Profile microservice.
  */
 @Component
-public class UserRegistrationKafkaListener {
+public class UserProfileUpdatedKafkaListener {
 
-    private static final Logger logger = LoggerFactory.getLogger(UserRegistrationKafkaListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserProfileUpdatedKafkaListener.class);
     private final UserCommandService userCommandService;
 
-    public UserRegistrationKafkaListener(UserCommandService userCommandService) {
+    public UserProfileUpdatedKafkaListener(UserCommandService userCommandService) {
         this.userCommandService = userCommandService;
     }
 
-    /**
-     * Listens to user registration events from Kafka
-     *
-     * @param event the user registration event
-     * @param partition the Kafka partition
-     * @param offset the message offset
-     */
     @KafkaListener(
-            topics = "${kafka.topics.user-registered:user.registered}",
+            topics = "${kafka.topics.profile-updated:community.profile.updated}",
             groupId = "${spring.kafka.consumer.group-id}",
             containerFactory = "kafkaListenerContainerFactory"
     )
-    public void handleUserRegistration(
+    public void handleProfileUpdated(
             @Payload UserRegistrationKafkaEvent event,
             @Header(KafkaHeaders.RECEIVED_PARTITION) int partition,
             @Header(KafkaHeaders.OFFSET) long offset) {
 
-        logger.info("Received user registration event from Kafka - userId: {}, profileId: {}, username: {}, partition: {}, offset: {}",
+        logger.info("Received profile update event from Kafka - userId: {}, profileId: {}, username: {}, partition: {}, offset: {}",
                 event.getUserId(), event.getProfileId(), event.getUsername(), partition, offset);
 
         try {
-            // Create command from Kafka event
-            RegisterUserCommand command = new RegisterUserCommand(
+            UpdateUserProfileCommand command = new UpdateUserProfileCommand(
                     event.getUserId(),
                     event.getProfileId(),
                     event.getUsername(),
@@ -55,19 +46,16 @@ public class UserRegistrationKafkaListener {
                     event.getOccurredOnAsInstant()
             );
 
-            // Handle the command
             var result = userCommandService.handle(command);
-
             if (result.isPresent()) {
-                logger.info("Successfully registered user from Kafka event: userId={}", event.getUserId());
+                logger.info("Updated cached profile data successfully for userId={}", event.getUserId());
             } else {
-                logger.warn("Failed to register user from Kafka event: userId={}", event.getUserId());
+                logger.warn("Profile update ignored because user was not found: userId={}, profileId={}",
+                        event.getUserId(), event.getProfileId());
             }
-
         } catch (Exception e) {
-            logger.error("Error processing user registration event: userId={}, error={}",
+            logger.error("Error processing profile update event: userId={}, error={}",
                     event.getUserId(), e.getMessage(), e);
-            // Consider implementing a dead letter queue or retry mechanism here
         }
     }
 }

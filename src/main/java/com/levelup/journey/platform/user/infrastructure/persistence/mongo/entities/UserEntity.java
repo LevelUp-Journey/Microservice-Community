@@ -27,5 +27,11 @@ public class UserEntity {
     @Indexed(unique = true, name = "idx_users_profile_id")
     private String profileId;
 
+    private String username;
+
+    private String profileUrl;
+
     private Instant createdAt;
+
+    private Instant updatedAt;
 }

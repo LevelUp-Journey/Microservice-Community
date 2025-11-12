@@ -1,5 +1,6 @@
 package com.levelup.journey.platform.user.infrastructure.messaging.kafka.events;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,6 +14,7 @@ import java.time.ZoneOffset;
  * Kafka event for user registration
  * Maps the incoming Kafka event to a Java object
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -23,6 +25,12 @@ public class UserRegistrationKafkaEvent {
 
     @JsonProperty("profileId")
     private String profileId;
+
+    @JsonProperty("username")
+    private String username;
+
+    @JsonProperty("profileUrl")
+    private String profileUrl;
 
     @JsonProperty("occurredOn")
     private int[] occurredOn;

@@ -3,23 +3,22 @@ package com.levelup.journey.platform.user.domain.model.commands;
 import java.time.Instant;
 
 /**
- * Command to register a new user in the system.
- * This command is typically created when receiving a user registration event from Kafka.
+ * Command that updates cached profile data for a user whenever the profile microservice emits a change.
  *
- * @param userId the user ID from the authentication system
- * @param profileId the profile ID from the profile bounded context
- * @param username the public username coming from profiles
- * @param profileUrl avatar/profile URL that should be cached locally
- * @param occurredOn the timestamp when the registration occurred
+ * @param userId unique identifier of the user in the auth system
+ * @param profileId identifier of the profile coming from the Profile bounded context
+ * @param username public username to store locally
+ * @param profileUrl avatar/profile URL to store locally
+ * @param occurredOn timestamp when the profile update happened
  */
-public record RegisterUserCommand(
-    String userId,
-    String profileId,
-    String username,
-    String profileUrl,
-    Instant occurredOn
+public record UpdateUserProfileCommand(
+        String userId,
+        String profileId,
+        String username,
+        String profileUrl,
+        Instant occurredOn
 ) {
-    public RegisterUserCommand {
+    public UpdateUserProfileCommand {
         if (userId == null || userId.isBlank()) {
             throw new IllegalArgumentException("userId cannot be null or empty");
         }

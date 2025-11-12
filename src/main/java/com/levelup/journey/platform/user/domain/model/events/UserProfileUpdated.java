@@ -8,18 +8,17 @@ import lombok.Getter;
 import java.time.Instant;
 
 /**
- * Domain event representing that a user has been registered in the system.
- * This event is triggered when a user registration event is received from Kafka.
+ * Domain event emitted whenever cached profile data changes.
  */
 @Getter
-public class UserRegistered implements DomainEvent {
+public class UserProfileUpdated implements DomainEvent {
     private final UserId userId;
     private final ProfileId profileId;
     private final String username;
     private final String profileUrl;
     private final Instant occurredOn;
 
-    public UserRegistered(UserId userId, ProfileId profileId, String username, String profileUrl, Instant occurredOn) {
+    public UserProfileUpdated(UserId userId, ProfileId profileId, String username, String profileUrl, Instant occurredOn) {
         this.userId = userId;
         this.profileId = profileId;
         this.username = username;
@@ -34,7 +33,7 @@ public class UserRegistered implements DomainEvent {
 
     @Override
     public String eventType() {
-        return "UserRegistered";
+        return "UserProfileUpdated";
     }
 
     @Override
