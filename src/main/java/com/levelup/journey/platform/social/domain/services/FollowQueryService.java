@@ -2,6 +2,8 @@ package com.levelup.journey.platform.social.domain.services;
 
 import com.levelup.journey.platform.social.domain.model.aggregates.Follow;
 import com.levelup.journey.platform.social.domain.model.queries.GetFollowByIdQuery;
+import com.levelup.journey.platform.social.domain.model.queries.GetFollowByUsersQuery;
+import com.levelup.journey.platform.social.domain.model.queries.GetFollowerCountQuery;
 import com.levelup.journey.platform.social.domain.model.queries.GetFollowersByUserIdQuery;
 import com.levelup.journey.platform.social.domain.model.queries.GetFollowingByUserIdQuery;
 
@@ -34,4 +36,18 @@ public interface FollowQueryService {
      * @return list of following relationships
      */
     List<Follow> handle(GetFollowingByUserIdQuery query);
+
+    /**
+     * Handles the query to get a follow relationship by follower and following user IDs
+     * @param query the get follow by users query
+     * @return the follow relationship if found
+     */
+    Optional<Follow> handle(GetFollowByUsersQuery query);
+
+    /**
+     * Handles the query to get the follower count for a user
+     * @param query the get follower count query
+     * @return the number of followers
+     */
+    long handle(GetFollowerCountQuery query);
 }

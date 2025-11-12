@@ -2,6 +2,7 @@ package com.levelup.journey.platform.social.domain.services;
 
 import com.levelup.journey.platform.social.domain.model.aggregates.Follow;
 import com.levelup.journey.platform.social.domain.model.commands.CreateFollowCommand;
+import com.levelup.journey.platform.social.domain.model.commands.RemoveFollowByUsersCommand;
 import com.levelup.journey.platform.social.domain.model.commands.RemoveFollowCommand;
 
 import java.util.Optional;
@@ -25,4 +26,11 @@ public interface FollowCommandService {
      * @return true if removed successfully
      */
     boolean handle(RemoveFollowCommand command);
+
+    /**
+     * Handles the command to remove a follow relationship by user IDs
+     * @param command the remove follow by users command
+     * @return true if removed successfully
+     */
+    boolean handle(RemoveFollowByUsersCommand command);
 }

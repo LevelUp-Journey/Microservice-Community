@@ -10,6 +10,8 @@ public record SubscriptionResource(
         String id,
         String userId,
         String communityId,
+        String communityName,
+        String communityImageUrl,
         Instant createdAt
 ) {
 }

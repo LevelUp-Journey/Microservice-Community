@@ -1,23 +1,20 @@
 package com.levelup.journey.platform.post.interfaces.rest;
 
-import com.levelup.journey.platform.post.domain.model.commands.DeleteCommentCommand;
 import com.levelup.journey.platform.post.domain.model.commands.DeletePostCommand;
 import com.levelup.journey.platform.post.domain.model.queries.GetAllPostsQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetPostByIdQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetPostsByCommunityIdQuery;
-import com.levelup.journey.platform.post.domain.model.valueobjects.CommentId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
+import com.levelup.journey.platform.post.application.internal.queryservices.PostQueryServiceImpl;
 import com.levelup.journey.platform.post.domain.services.PostCommandService;
 import com.levelup.journey.platform.post.domain.services.PostQueryService;
-import com.levelup.journey.platform.post.interfaces.rest.resources.AddCommentResource;
 import com.levelup.journey.platform.post.interfaces.rest.resources.CreatePostResource;
+import com.levelup.journey.platform.post.interfaces.rest.resources.PagedResponse;
 import com.levelup.journey.platform.post.interfaces.rest.resources.PostResource;
-import com.levelup.journey.platform.post.interfaces.rest.transform.AddCommentCommandFromResourceAssembler;
 import com.levelup.journey.platform.post.interfaces.rest.transform.CreatePostCommandFromResourceAssembler;
 import com.levelup.journey.platform.post.interfaces.rest.transform.PostResourceFromEntityAssembler;
 import com.levelup.journey.platform.shared.domain.acl.SocialRelationshipService;
-import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -50,14 +47,32 @@ public class PostController {
 
     private final PostCommandService postCommandService;
     private final PostQueryService postQueryService;
+    private final PostQueryServiceImpl postQueryServiceImpl;
     private final SocialRelationshipService socialRelationshipService;
+    private final PostResourceFromEntityAssembler postResourceAssembler;
 
     public PostController(PostCommandService postCommandService,
                          PostQueryService postQueryService,
-                         SocialRelationshipService socialRelationshipService) {
+                         PostQueryServiceImpl postQueryServiceImpl,
+                         SocialRelationshipService socialRelationshipService,
+                         PostResourceFromEntityAssembler postResourceAssembler) {
         this.postCommandService = postCommandService;
         this.postQueryService = postQueryService;
+        this.postQueryServiceImpl = postQueryServiceImpl;
         this.socialRelationshipService = socialRelationshipService;
+        this.postResourceAssembler = postResourceAssembler;
+    }
+
+    /**
+     * Helper method to get the current authenticated user ID
+     * @return the user ID if authenticated, null otherwise
+     */
+    private String getCurrentUserId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getName() != null && !authentication.getName().isBlank()) {
+            return authentication.getName().trim();
+        }
+        return null;
     }
 
     /**
@@ -90,27 +105,27 @@ public class PostController {
         }
 
         String authorId = authentication.getName().trim();
-        logger.info("Creating post with title: {}, communityId: {}, authorId: {}",
-                   resource.title(), resource.communityId(), authorId);
+        logger.info("Creating post in communityId: {}, authorId: {}",
+                   resource.communityId(), authorId);
 
         try {
             var command = CreatePostCommandFromResourceAssembler.toCommandFromResource(resource, authorId);
             var post = postCommandService.handle(command);
 
             if (post.isEmpty()) {
-                logger.warn("Failed to create post with title: {} - service returned empty result", resource.title());
+                logger.warn("Failed to create post in community: {} - service returned empty result", resource.communityId());
                 return ResponseEntity.badRequest().build();
             }
 
-            var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
+            var postResource = postResourceAssembler.toResourceFromEntity(post.get(), authorId);
             logger.info("Post created successfully with ID: {}", postResource.id());
             return new ResponseEntity<>(postResource, HttpStatus.CREATED);
 
         } catch (IllegalArgumentException e) {
-            logger.error("Validation error creating post with title: {} - {}", resource.title(), e.getMessage());
+            logger.error("Validation error creating post in community: {} - {}", resource.communityId(), e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            logger.error("Unexpected error creating post with title: {}", resource.title(), e);
+            logger.error("Unexpected error creating post in community: {}", resource.communityId(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -141,7 +156,9 @@ public class PostController {
                 return ResponseEntity.notFound().build();
             }
 
-            var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
+            // Get current user ID if authenticated
+            String currentUserId = getCurrentUserId();
+            var postResource = postResourceAssembler.toResourceFromEntity(post.get(), currentUserId);
             logger.debug("Post retrieved successfully with ID: {}", postId);
             return ResponseEntity.ok(postResource);
 
@@ -158,25 +175,41 @@ public class PostController {
      * Get all posts
      */
     @GetMapping
-    @Operation(summary = "Get all posts", description = "Retrieve all posts from all communities, ordered by creation date (most recent first)")
+    @Operation(summary = "Get all posts", description = "Retrieve all posts from all communities with pagination, ordered by creation date (most recent first)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Posts retrieved successfully",
+            @ApiResponse(responseCode = "200", description = "Posts retrieved successfully with pagination metadata",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = PostResource.class)))
+                            schema = @Schema(implementation = PagedResponse.class)))
     })
-    public ResponseEntity<List<PostResource>> getAllPosts() {
-        logger.info("Retrieving all posts");
+    public ResponseEntity<PagedResponse<PostResource>> getAllPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        logger.info("Retrieving all posts - page: {}, size: {}", page, size);
 
         try {
-            var query = new GetAllPostsQuery();
-            var posts = postQueryService.handle(query);
+            // Validate parameters
+            if (page < 0) {
+                logger.warn("Invalid page value: {}. Must be non-negative", page);
+                return ResponseEntity.badRequest().build();
+            }
+            if (size <= 0 || size > 100) {
+                logger.warn("Invalid size value: {}. Must be between 1 and 100", size);
+                return ResponseEntity.badRequest().build();
+            }
 
+            var query = new GetAllPostsQuery(page, size);
+            var posts = postQueryService.handle(query);
+            var totalElements = postQueryServiceImpl.countAllPosts();
+
+            // Get current user ID if authenticated
+            String currentUserId = getCurrentUserId();
             var postResources = posts.stream()
-                    .map(PostResourceFromEntityAssembler::toResourceFromEntity)
+                    .map(post -> postResourceAssembler.toResourceFromEntity(post, currentUserId))
                     .collect(Collectors.toList());
 
-            logger.info("Retrieved {} posts successfully", postResources.size());
-            return ResponseEntity.ok(postResources);
+            var pagedResponse = PagedResponse.of(postResources, page, size, totalElements);
+            logger.info("Retrieved {} posts successfully for page {} of {}", postResources.size(), page, pagedResponse.totalPages());
+            return ResponseEntity.ok(pagedResponse);
 
         } catch (Exception e) {
             logger.error("Unexpected error retrieving all posts", e);
@@ -188,27 +221,46 @@ public class PostController {
      * Get posts by community ID
      */
     @GetMapping("/community/{communityId}")
-    @Operation(summary = "Get posts by community", description = "Retrieve all posts from a specific community, ordered by creation date (most recent first)")
+    @Operation(summary = "Get posts by community", description = "Retrieve all posts from a specific community with pagination, ordered by creation date (most recent first)")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Posts retrieved successfully",
+            @ApiResponse(responseCode = "200", description = "Posts retrieved successfully with pagination metadata",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = PostResource.class))),
+                            schema = @Schema(implementation = PagedResponse.class))),
             @ApiResponse(responseCode = "400", description = "Invalid community ID format",
                     content = @Content)
     })
-    public ResponseEntity<List<PostResource>> getPostsByCommunity(@PathVariable String communityId) {
-        logger.info("Retrieving posts for community with ID: {}", communityId);
+    public ResponseEntity<PagedResponse<PostResource>> getPostsByCommunity(
+            @PathVariable String communityId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        logger.info("Retrieving posts for community with ID: {}, page: {}, size: {}", communityId, page, size);
 
         try {
-            var query = new GetPostsByCommunityIdQuery(CommunityId.of(communityId));
-            var posts = postQueryService.handle(query);
+            // Validate parameters
+            if (page < 0) {
+                logger.warn("Invalid page value: {}. Must be non-negative", page);
+                return ResponseEntity.badRequest().build();
+            }
+            if (size <= 0 || size > 100) {
+                logger.warn("Invalid size value: {}. Must be between 1 and 100", size);
+                return ResponseEntity.badRequest().build();
+            }
 
+            var communityIdVO = CommunityId.of(communityId);
+            var query = new GetPostsByCommunityIdQuery(communityIdVO, page, size);
+            var posts = postQueryService.handle(query);
+            var totalElements = postQueryServiceImpl.countPostsByCommunity(communityIdVO);
+
+            // Get current user ID if authenticated
+            String currentUserId = getCurrentUserId();
             var postResources = posts.stream()
-                    .map(PostResourceFromEntityAssembler::toResourceFromEntity)
+                    .map(post -> postResourceAssembler.toResourceFromEntity(post, currentUserId))
                     .collect(Collectors.toList());
 
-            logger.info("Retrieved {} posts for community {}", postResources.size(), communityId);
-            return ResponseEntity.ok(postResources);
+            var pagedResponse = PagedResponse.of(postResources, page, size, totalElements);
+            logger.info("Retrieved {} posts for community {} on page {} of {}",
+                       postResources.size(), communityId, page, pagedResponse.totalPages());
+            return ResponseEntity.ok(pagedResponse);
 
         } catch (IllegalArgumentException e) {
             logger.error("Invalid community ID format: {} - {}", communityId, e.getMessage());
@@ -255,18 +307,22 @@ public class PostController {
             // Get user's subscribed communities
             var subscribedCommunityIds = socialRelationshipService.getSubscribedCommunities(userId);
 
-            // Get all posts and filter by feed sources
-            var query = new GetAllPostsQuery();
+            // Calculate page from offset and limit
+            int page = offset / limit;
+            int effectiveSize = limit * 3; // Fetch more to account for filtering
+
+            // Get posts with pagination and filter by feed sources
+            var query = new GetAllPostsQuery(page, effectiveSize);
             var allPosts = postQueryService.handle(query);
 
             // Filter posts: include posts from followed users OR from subscribed communities
+            // Get current user ID if authenticated
+            String currentUserId = getCurrentUserId();
             var feedPosts = allPosts.stream()
                     .filter(post -> followedUserIds.contains(post.authorId().value()) ||
                                    subscribedCommunityIds.contains(post.communityId().value()))
-                    .sorted((p1, p2) -> p2.createdAt().compareTo(p1.createdAt())) // Most recent first
-                    .skip(offset)
                     .limit(limit)
-                    .map(PostResourceFromEntityAssembler::toResourceFromEntity)
+                    .map(post -> postResourceAssembler.toResourceFromEntity(post, currentUserId))
                     .collect(Collectors.toList());
 
             logger.info("Retrieved {} feed posts for user {}", feedPosts.size(), userId);
@@ -277,112 +333,6 @@ public class PostController {
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
             logger.error("Unexpected error retrieving feed posts for user: {}", userId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-    @PostMapping("/{postId}/comments")
-    @Operation(
-        summary = "Add comment to post",
-        description = "Add a new comment to an existing post. The commenter identity (user and profile) is derived from the authenticated JWT, so the body only needs the comment content."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Comment added successfully",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = PostResource.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid input data or comment already exists",
-                    content = @Content),
-            @ApiResponse(responseCode = "404", description = "Post not found",
-                    content = @Content),
-            @ApiResponse(responseCode = "409", description = "Comment with this ID already exists",
-                    content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
-                    content = @Content)
-    })
-    public ResponseEntity<PostResource> addComment(@PathVariable String postId,
-                                                   @Valid @RequestBody AddCommentResource resource) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
-            logger.warn("Attempted to add comment to post {} without a valid authenticated user", postId);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        String authorId = authentication.getName().trim();
-        logger.info("Adding comment to post: {}, authorId: {}",
-                   postId, authorId);
-
-        try {
-            var command = AddCommentCommandFromResourceAssembler.toCommandFromResource(postId, resource, authorId);
-            var post = postCommandService.handle(command);
-
-            if (post.isEmpty()) {
-                logger.warn("Failed to add comment to post: {} - post not found or comment already exists",
-                           postId);
-                return ResponseEntity.notFound().build();
-            }
-
-            var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
-            logger.info("Comment added successfully to post: {}", postId);
-            return ResponseEntity.ok(postResource);
-
-        } catch (IllegalArgumentException e) {
-            logger.error("Validation error adding comment to post: {} - {}",
-                        postId, e.getMessage());
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            logger.error("Unexpected error adding comment to post: {}", postId, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    /**
-     * Delete a comment
-     */
-    @DeleteMapping("/{postId}/comments/{commentId}")
-    @Operation(summary = "Delete comment", description = "Delete a comment. Only the comment author, post author, or admin can delete comments.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Comment deleted successfully",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = PostResource.class))),
-            @ApiResponse(responseCode = "400", description = "Invalid comment ID format",
-                    content = @Content),
-            @ApiResponse(responseCode = "403", description = "Access denied - insufficient permissions to delete comment",
-                    content = @Content),
-            @ApiResponse(responseCode = "404", description = "Post or comment not found",
-                    content = @Content),
-            @ApiResponse(responseCode = "500", description = "Internal server error",
-                    content = @Content)
-    })
-    public ResponseEntity<PostResource> deleteComment(@PathVariable String postId,
-                                                      @PathVariable String commentId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
-            logger.warn("Attempted to delete comment {} from post {} without a valid authenticated user", commentId, postId);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-
-        String requesterId = authentication.getName().trim();
-        logger.info("Deleting comment: {} from post: {}, requesterId: {}", commentId, postId, requesterId);
-
-        try {
-            var command = new DeleteCommentCommand(PostId.of(postId), CommentId.of(commentId), UserId.of(requesterId));
-            var post = postCommandService.handle(command);
-
-            if (post.isEmpty()) {
-                logger.warn("Failed to delete comment: {} from post: {} - comment not found or access denied",
-                           commentId, postId);
-                return ResponseEntity.notFound().build();
-            }
-
-            var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
-            logger.info("Comment deleted successfully: {} from post: {}", commentId, postId);
-            return ResponseEntity.ok(postResource);
-
-        } catch (IllegalArgumentException e) {
-            logger.error("Validation error deleting comment: {} from post: {} - {}",
-                        commentId, postId, e.getMessage());
-            return ResponseEntity.badRequest().build();
-        } catch (Exception e) {
-            logger.error("Unexpected error deleting comment: {} from post: {}", commentId, postId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

@@ -15,7 +15,6 @@ public class CreatePostCommandFromResourceAssembler {
         return new PublishPostCommand(
                 CommunityId.of(resource.communityId()),
                 UserId.of(authorId),
-                resource.title(),
                 resource.content(),
                 imageUrl
         );

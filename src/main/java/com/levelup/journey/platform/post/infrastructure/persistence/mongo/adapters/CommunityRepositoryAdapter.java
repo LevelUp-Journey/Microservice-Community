@@ -51,6 +51,13 @@ public class CommunityRepositoryAdapter implements CommunityRepository {
         mongoRepository.deleteById(id.value());
     }
 
+    @Override
+    public List<Community> findByOwnerId(UserId ownerId) {
+        return mongoRepository.findByOwnerId(ownerId.value()).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
     private CommunityEntity toEntity(Community community) {
         return new CommunityEntity(
                 community.id().value(),

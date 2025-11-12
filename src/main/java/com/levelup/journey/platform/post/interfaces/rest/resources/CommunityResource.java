@@ -13,6 +13,7 @@ public record CommunityResource(
         String name,
         String description,
         String imageUrl,
-        Instant createdAt
+        Instant createdAt,
+        int followerCount
 ) {
 }

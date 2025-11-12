@@ -42,4 +42,12 @@ public interface SocialRelationshipService {
      * @return List of community IDs that this user is subscribed to
      */
     List<String> getSubscribedCommunities(String userId);
+
+    /**
+     * Gets the number of subscribers (followers) for a given community.
+     *
+     * @param communityId The ID of the community
+     * @return The count of subscribers for the community
+     */
+    int getSubscriberCountByCommunityId(String communityId);
 }

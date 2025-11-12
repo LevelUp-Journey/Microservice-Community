@@ -10,22 +10,19 @@ public class PostPublished implements DomainEvent {
     private final String aggregateId;
     private final String communityId;
     private final String authorId;
-    private final String title;
     private final String content;
     private final Instant occurredOn;
 
-    public PostPublished(String aggregateId, String communityId, String authorId, String title, String content, Instant occurredOn) {
+    public PostPublished(String aggregateId, String communityId, String authorId, String content, Instant occurredOn) {
         this.aggregateId = aggregateId;
         this.communityId = communityId;
         this.authorId = authorId;
-        this.title = title;
         this.content = content;
         this.occurredOn = occurredOn;
 
         if (aggregateId == null || aggregateId.isBlank()) throw new IllegalArgumentException("aggregateId requerido");
         if (communityId == null || communityId.isBlank()) throw new IllegalArgumentException("communityId requerido");
         if (authorId == null || authorId.isBlank()) throw new IllegalArgumentException("authorId requerido");
-        if (title == null || title.isBlank()) throw new IllegalArgumentException("title requerido");
         if (content == null) throw new IllegalArgumentException("content requerido");
         if (occurredOn == null) throw new IllegalArgumentException("occurredOn requerido");
     }
@@ -51,10 +48,6 @@ public class PostPublished implements DomainEvent {
 
     public String authorId() {
         return authorId;
-    }
-
-    public String title() {
-        return title;
     }
 
     public String content() {

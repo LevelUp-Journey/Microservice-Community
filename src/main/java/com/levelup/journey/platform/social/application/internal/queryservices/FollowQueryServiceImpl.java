@@ -2,14 +2,16 @@ package com.levelup.journey.platform.social.application.internal.queryservices;
 
 import com.levelup.journey.platform.social.domain.model.aggregates.Follow;
 import com.levelup.journey.platform.social.domain.model.queries.GetFollowByIdQuery;
+import com.levelup.journey.platform.social.domain.model.queries.GetFollowByUsersQuery;
+import com.levelup.journey.platform.social.domain.model.queries.GetFollowerCountQuery;
 import com.levelup.journey.platform.social.domain.model.queries.GetFollowersByUserIdQuery;
 import com.levelup.journey.platform.social.domain.model.queries.GetFollowingByUserIdQuery;
 import com.levelup.journey.platform.social.domain.model.repositories.FollowRepository;
 import com.levelup.journey.platform.social.domain.services.FollowQueryService;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.List;
 
 /**
  * Follow Query Service Implementation
@@ -30,6 +32,11 @@ public class FollowQueryServiceImpl implements FollowQueryService {
     }
 
     @Override
+    public Optional<Follow> handle(GetFollowByUsersQuery query) {
+        return followRepository.findByFollowerIdAndFollowingId(query.followerId(), query.followingId());
+    }
+
+    @Override
     public List<Follow> handle(GetFollowersByUserIdQuery query) {
         return followRepository.findByFollowingId(query.followingId());
     }
@@ -37,5 +44,10 @@ public class FollowQueryServiceImpl implements FollowQueryService {
     @Override
     public List<Follow> handle(GetFollowingByUserIdQuery query) {
         return followRepository.findByFollowerId(query.followerId());
+    }
+
+    @Override
+    public long handle(GetFollowerCountQuery query) {
+        return followRepository.countByFollowingId(query.userId());
     }
 }

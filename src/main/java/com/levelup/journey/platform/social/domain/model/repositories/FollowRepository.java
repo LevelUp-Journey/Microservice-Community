@@ -16,5 +16,6 @@ public interface FollowRepository {
     List<Follow> findByFollowerId(UserId followerId);
     List<Follow> findByFollowingId(UserId followingId);
     Optional<Follow> findByFollowerIdAndFollowingId(UserId followerId, UserId followingId);
+    long countByFollowingId(UserId followingId);
     void deleteById(FollowId id);
 }

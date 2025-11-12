@@ -58,6 +58,11 @@ public class FollowRepositoryAdapter implements FollowRepository {
     }
 
     @Override
+    public long countByFollowingId(UserId followingId) {
+        return mongoRepository.countByFollowingId(followingId.value());
+    }
+
+    @Override
     public void deleteById(FollowId id) {
         mongoRepository.deleteById(id.value());
     }

@@ -18,4 +18,6 @@ public interface FollowMongoRepository extends MongoRepository<FollowEntity, Str
     List<FollowEntity> findByFollowingId(String followingId);
 
     Optional<FollowEntity> findByFollowerIdAndFollowingId(String followerId, String followingId);
+
+    long countByFollowingId(String followingId);
 }

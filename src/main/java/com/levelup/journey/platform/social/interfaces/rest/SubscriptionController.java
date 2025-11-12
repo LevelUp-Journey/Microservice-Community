@@ -12,6 +12,7 @@ import com.levelup.journey.platform.social.domain.services.SubscriptionQueryServ
 import com.levelup.journey.platform.social.interfaces.rest.resources.CreateSubscriptionResource;
 import com.levelup.journey.platform.social.interfaces.rest.resources.SubscriptionResource;
 import com.levelup.journey.platform.social.interfaces.rest.transform.CreateSubscriptionCommandFromResourceAssembler;
+import com.levelup.journey.platform.shared.domain.acl.CommunityService;
 import com.levelup.journey.platform.social.interfaces.rest.transform.SubscriptionResourceFromEntityAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -46,11 +47,14 @@ public class SubscriptionController {
 
     private final SubscriptionCommandService subscriptionCommandService;
     private final SubscriptionQueryService subscriptionQueryService;
+    private final CommunityService communityService;
 
     public SubscriptionController(SubscriptionCommandService subscriptionCommandService,
-                                 SubscriptionQueryService subscriptionQueryService) {
+                                 SubscriptionQueryService subscriptionQueryService,
+                                 CommunityService communityService) {
         this.subscriptionCommandService = subscriptionCommandService;
         this.subscriptionQueryService = subscriptionQueryService;
+        this.communityService = communityService;
     }
 
     @PostMapping
@@ -134,7 +138,18 @@ public class SubscriptionController {
             var subscriptions = subscriptionQueryService.handle(query);
 
             var subscriptionResources = subscriptions.stream()
-                    .map(SubscriptionResourceFromEntityAssembler::toResourceFromEntity)
+                    .map(subscription -> {
+                        String communityName = communityService.getCommunityName(subscription.communityId().value());
+                        String communityImageUrl = communityService.getCommunityImageUrl(subscription.communityId().value());
+                        return new SubscriptionResource(
+                                subscription.id().value(),
+                                subscription.userId().value(),
+                                subscription.communityId().value(),
+                                communityName,
+                                communityImageUrl,
+                                subscription.createdAt()
+                        );
+                    })
                     .collect(Collectors.toList());
 
             return ResponseEntity.ok(subscriptionResources);

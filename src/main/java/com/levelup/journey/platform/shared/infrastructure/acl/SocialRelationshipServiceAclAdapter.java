@@ -2,6 +2,7 @@ package com.levelup.journey.platform.shared.infrastructure.acl;
 
 import com.levelup.journey.platform.shared.domain.acl.SocialRelationshipService;
 import com.levelup.journey.platform.social.domain.model.queries.GetFollowingByUserIdQuery;
+import com.levelup.journey.platform.social.domain.model.queries.GetSubscriptionsByCommunityIdQuery;
 import com.levelup.journey.platform.social.domain.model.queries.GetSubscriptionsByUserIdQuery;
 import com.levelup.journey.platform.social.domain.services.FollowQueryService;
 import com.levelup.journey.platform.social.domain.services.SubscriptionQueryService;
@@ -121,6 +122,27 @@ public class SocialRelationshipServiceAclAdapter implements SocialRelationshipSe
             logger.error("Error in social relationship ACL adapter getting subscriptions: {}",
                         e.getMessage());
             return List.of(); // Fail-safe: return empty list
+        }
+    }
+
+    @Override
+    public int getSubscriberCountByCommunityId(String communityId) {
+        try {
+            // Translate to Social context query
+            var query = new GetSubscriptionsByCommunityIdQuery(
+                com.levelup.journey.platform.social.domain.model.valueobjects.CommunityId.of(
+                    communityId
+                )
+            );
+
+            // Execute query and return count
+            var subscriptions = subscriptionQueryService.handle(query);
+            return subscriptions.size();
+
+        } catch (Exception e) {
+            logger.error("Error in social relationship ACL adapter getting subscriber count: {}",
+                        e.getMessage());
+            return 0; // Fail-safe: return zero count
         }
     }
 }
