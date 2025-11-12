@@ -1,6 +1,7 @@
 package com.levelup.journey.platform.post.domain.model.repositories;
 
 import com.levelup.journey.platform.post.domain.model.aggregates.Post;
+import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
 
 import java.util.List;
@@ -11,6 +12,8 @@ public interface PostRepository {
     Post save(Post post);
     Optional<Post> findById(PostId id);
     List<Post> findAll();
+    List<Post> findAll(int page, int size);
+    List<Post> findByCommunityId(CommunityId communityId, int page, int size);
     void deleteById(PostId id);
 }
 

@@ -13,6 +13,7 @@ public record PostResource(
         String authorProfileId,
         String content,
         String imageUrl,
-        Instant createdAt
+        Instant createdAt,
+        ReactionSummaryResource reactions
 ) {
 }

@@ -9,6 +9,8 @@ import com.levelup.journey.platform.post.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
 import com.levelup.journey.platform.post.infrastructure.persistence.mongo.entities.PostEntity;
 import com.levelup.journey.platform.post.infrastructure.persistence.mongo.repositories.PostMongoRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -49,17 +51,34 @@ public class PostRepositoryAdapter implements PostRepository {
     }
 
     @Override
+    public List<Post> findAll(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return mongoRepository.findAllByOrderByCreatedAtDesc(pageable).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Post> findByCommunityId(CommunityId communityId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return mongoRepository.findByCommunityIdOrderByCreatedAtDesc(communityId.value(), pageable).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public void deleteById(PostId id) {
         mongoRepository.deleteById(id.value());
     }
 
     /**
-     * Find posts by community ID
+     * Find posts by community ID (deprecated - use paginated version)
      * @param communityId the community identifier
      * @return list of posts
      */
     public List<Post> findByCommunityId(CommunityId communityId) {
-        return mongoRepository.findByCommunityIdOrderByCreatedAtDesc(communityId.value()).stream()
+        Pageable pageable = PageRequest.of(0, 100); // Default to first 100
+        return mongoRepository.findByCommunityIdOrderByCreatedAtDesc(communityId.value(), pageable).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
     }

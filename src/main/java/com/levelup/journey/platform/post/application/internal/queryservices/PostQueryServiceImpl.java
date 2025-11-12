@@ -6,7 +6,6 @@ import com.levelup.journey.platform.post.domain.model.queries.GetPostByIdQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetPostsByCommunityIdQuery;
 import com.levelup.journey.platform.post.domain.model.repositories.PostRepository;
 import com.levelup.journey.platform.post.domain.services.PostQueryService;
-import com.levelup.journey.platform.post.infrastructure.persistence.mongo.adapters.PostRepositoryAdapter;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,12 +20,9 @@ import java.util.Optional;
 public class PostQueryServiceImpl implements PostQueryService {
 
     private final PostRepository postRepository;
-    private final PostRepositoryAdapter postRepositoryAdapter;
 
-    public PostQueryServiceImpl(PostRepository postRepository,
-                                PostRepositoryAdapter postRepositoryAdapter) {
+    public PostQueryServiceImpl(PostRepository postRepository) {
         this.postRepository = postRepository;
-        this.postRepositoryAdapter = postRepositoryAdapter;
     }
 
     @Override
@@ -38,22 +34,14 @@ public class PostQueryServiceImpl implements PostQueryService {
     @Override
     @Transactional(readOnly = true)
     public List<Post> handle(GetAllPostsQuery query) {
-        List<Post> posts = postRepository.findAll();
-
-        // Sort by creation date descending (most recent first)
-        posts.sort((p1, p2) -> p2.createdAt().compareTo(p1.createdAt()));
-
-        return posts;
+        // Use paginated repository method (sorting is handled by MongoDB query)
+        return postRepository.findAll(query.page(), query.size());
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<Post> handle(GetPostsByCommunityIdQuery query) {
-        List<Post> posts = postRepositoryAdapter.findByCommunityId(query.communityId());
-
-        // Sort by creation date descending (most recent first)
-        posts.sort((p1, p2) -> p2.createdAt().compareTo(p1.createdAt()));
-
-        return posts;
+        // Use paginated repository method (sorting is handled by MongoDB query)
+        return postRepository.findByCommunityId(query.communityId(), query.page(), query.size());
     }
 }
