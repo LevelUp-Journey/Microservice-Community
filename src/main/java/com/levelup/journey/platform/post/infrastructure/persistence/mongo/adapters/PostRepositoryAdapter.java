@@ -85,8 +85,7 @@ public class PostRepositoryAdapter implements PostRepository {
                 ProfileId.of(entity.getAuthorProfileId()),
                 entity.getContent(),
                 imageUrl,
-                entity.getCreatedAt(),
-                List.of() // Comments loaded separately when needed
+                entity.getCreatedAt()
         );
     }
 }

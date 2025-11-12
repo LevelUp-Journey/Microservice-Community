@@ -51,16 +51,13 @@ public class PostController {
     private final PostCommandService postCommandService;
     private final PostQueryService postQueryService;
     private final SocialRelationshipService socialRelationshipService;
-    private final PostResourceFromEntityAssembler postResourceAssembler;
 
     public PostController(PostCommandService postCommandService,
                          PostQueryService postQueryService,
-                         SocialRelationshipService socialRelationshipService,
-                         PostResourceFromEntityAssembler postResourceAssembler) {
+                         SocialRelationshipService socialRelationshipService) {
         this.postCommandService = postCommandService;
         this.postQueryService = postQueryService;
         this.socialRelationshipService = socialRelationshipService;
-        this.postResourceAssembler = postResourceAssembler;
     }
 
     /**
@@ -105,7 +102,7 @@ public class PostController {
                 return ResponseEntity.badRequest().build();
             }
 
-            var postResource = postResourceAssembler.toResourceFromEntity(post.get());
+            var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
             logger.info("Post created successfully with ID: {}", postResource.id());
             return new ResponseEntity<>(postResource, HttpStatus.CREATED);
 
@@ -144,7 +141,7 @@ public class PostController {
                 return ResponseEntity.notFound().build();
             }
 
-            var postResource = postResourceAssembler.toResourceFromEntity(post.get());
+            var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
             logger.debug("Post retrieved successfully with ID: {}", postId);
             return ResponseEntity.ok(postResource);
 
@@ -175,7 +172,7 @@ public class PostController {
             var posts = postQueryService.handle(query);
 
             var postResources = posts.stream()
-                    .map(postResourceAssembler::toResourceFromEntity)
+                    .map(PostResourceFromEntityAssembler::toResourceFromEntity)
                     .collect(Collectors.toList());
 
             logger.info("Retrieved {} posts successfully", postResources.size());
@@ -207,7 +204,7 @@ public class PostController {
             var posts = postQueryService.handle(query);
 
             var postResources = posts.stream()
-                    .map(postResourceAssembler::toResourceFromEntity)
+                    .map(PostResourceFromEntityAssembler::toResourceFromEntity)
                     .collect(Collectors.toList());
 
             logger.info("Retrieved {} posts for community {}", postResources.size(), communityId);
@@ -269,7 +266,7 @@ public class PostController {
                     .sorted((p1, p2) -> p2.createdAt().compareTo(p1.createdAt())) // Most recent first
                     .skip(offset)
                     .limit(limit)
-                    .map(postResourceAssembler::toResourceFromEntity)
+                    .map(PostResourceFromEntityAssembler::toResourceFromEntity)
                     .collect(Collectors.toList());
 
             logger.info("Retrieved {} feed posts for user {}", feedPosts.size(), userId);
@@ -323,7 +320,7 @@ public class PostController {
                 return ResponseEntity.notFound().build();
             }
 
-            var postResource = postResourceAssembler.toResourceFromEntity(post.get());
+            var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
             logger.info("Comment added successfully to post: {}", postId);
             return ResponseEntity.ok(postResource);
 
@@ -376,7 +373,7 @@ public class PostController {
                 return ResponseEntity.notFound().build();
             }
 
-            var postResource = postResourceAssembler.toResourceFromEntity(post.get());
+            var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
             logger.info("Comment deleted successfully: {} from post: {}", commentId, postId);
             return ResponseEntity.ok(postResource);
 

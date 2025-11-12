@@ -1,6 +1,5 @@
 package com.levelup.journey.platform.post.domain.model.aggregates;
 
-import com.levelup.journey.platform.post.domain.model.entities.Comment;
 import com.levelup.journey.platform.post.domain.model.events.PostPublished;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.model.valueobjects.PostId;
@@ -10,15 +9,10 @@ import com.levelup.journey.platform.post.domain.model.valueobjects.ImageUrl;
 import com.levelup.journey.platform.shared.domain.AggregateRoot;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
 
 /**
  * Post Aggregate
- * Note: Comments are stored in a separate table and loaded on-demand.
- * The comments list is transient and only populated when explicitly loaded.
  */
 public final class Post extends AggregateRoot {
     private final PostId id;
@@ -28,7 +22,6 @@ public final class Post extends AggregateRoot {
     private String content;
     private ImageUrl imageUrl;
     private final Instant createdAt;
-    private final List<Comment> comments = new ArrayList<>();
 
     private Post(PostId id, CommunityId communityId, UserId authorId, ProfileId authorProfileId, String content, ImageUrl imageUrl, Instant createdAt) {
         this.id = Objects.requireNonNull(id, "id required");
@@ -55,15 +48,10 @@ public final class Post extends AggregateRoot {
      * @param content post content (supports Markdown)
      * @param imageUrl optional image URL
      * @param createdAt creation timestamp
-     * @param existingComments optional list of comments (can be empty if not loaded)
      * @return restored Post aggregate
      */
-    public static Post restore(PostId id, CommunityId communityId, UserId authorId, ProfileId authorProfileId, String content, ImageUrl imageUrl, Instant createdAt, List<Comment> existingComments) {
-        Post p = new Post(id, communityId, authorId, authorProfileId, content, imageUrl, createdAt);
-        if (existingComments != null && !existingComments.isEmpty()) {
-            p.comments.addAll(existingComments);
-        }
-        return p;
+    public static Post restore(PostId id, CommunityId communityId, UserId authorId, ProfileId authorProfileId, String content, ImageUrl imageUrl, Instant createdAt) {
+        return new Post(id, communityId, authorId, authorProfileId, content, imageUrl, createdAt);
     }
 
     private static String requireText(String value, String field) {
@@ -78,11 +66,4 @@ public final class Post extends AggregateRoot {
     public String content() { return content; }
     public ImageUrl imageUrl() { return imageUrl; }
     public Instant createdAt() { return createdAt; }
-
-    /**
-     * Returns the comments collection.
-     * Note: This may be empty if comments were not explicitly loaded.
-     * Use CommentQueryService to load comments when needed.
-     */
-    public List<Comment> comments() { return Collections.unmodifiableList(comments); }
 }

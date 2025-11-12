@@ -1,7 +1,6 @@
 package com.levelup.journey.platform.post.interfaces.rest.resources;
 
 import java.time.Instant;
-import java.util.List;
 
 /**
  * Post Resource
@@ -9,12 +8,11 @@ import java.util.List;
  */
 public record PostResource(
         String id,
-        CommunityResource community,
+        String communityId,
         String authorId,
         String authorProfileId,
         String content,
         String imageUrl,
-        Instant createdAt,
-        List<CommentResource> comments
+        Instant createdAt
 ) {
 }
