@@ -15,12 +15,8 @@ public record CreatePostResource(
                 message = "El ID de la comunidad debe ser un UUID válido")
         String communityId,
 
-        @NotBlank(message = "El título es obligatorio")
-        @Size(min = 1, max = 200, message = "El título debe tener entre 1 y 200 caracteres")
-        String title,
-
         @NotBlank(message = "El contenido es obligatorio")
-        @Size(min = 1, max = 5000, message = "El contenido debe tener entre 1 y 5000 caracteres")
+        @Size(min = 1, max = 10000, message = "El contenido debe tener entre 1 y 10000 caracteres")
         String content,
 
         @JsonProperty(value = "imageUrl", required = false)

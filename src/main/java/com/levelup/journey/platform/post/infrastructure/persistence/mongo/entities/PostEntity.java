@@ -27,7 +27,6 @@ public class PostEntity {
 
     private String authorId;
     private String authorProfileId;
-    private String title;
     private String content;
     private String imageUrl;
     private Instant createdAt;

@@ -51,13 +51,16 @@ public class PostController {
     private final PostCommandService postCommandService;
     private final PostQueryService postQueryService;
     private final SocialRelationshipService socialRelationshipService;
+    private final PostResourceFromEntityAssembler postResourceAssembler;
 
     public PostController(PostCommandService postCommandService,
                          PostQueryService postQueryService,
-                         SocialRelationshipService socialRelationshipService) {
+                         SocialRelationshipService socialRelationshipService,
+                         PostResourceFromEntityAssembler postResourceAssembler) {
         this.postCommandService = postCommandService;
         this.postQueryService = postQueryService;
         this.socialRelationshipService = socialRelationshipService;
+        this.postResourceAssembler = postResourceAssembler;
     }
 
     /**
@@ -90,27 +93,27 @@ public class PostController {
         }
 
         String authorId = authentication.getName().trim();
-        logger.info("Creating post with title: {}, communityId: {}, authorId: {}",
-                   resource.title(), resource.communityId(), authorId);
+        logger.info("Creating post in communityId: {}, authorId: {}",
+                   resource.communityId(), authorId);
 
         try {
             var command = CreatePostCommandFromResourceAssembler.toCommandFromResource(resource, authorId);
             var post = postCommandService.handle(command);
 
             if (post.isEmpty()) {
-                logger.warn("Failed to create post with title: {} - service returned empty result", resource.title());
+                logger.warn("Failed to create post in community: {} - service returned empty result", resource.communityId());
                 return ResponseEntity.badRequest().build();
             }
 
-            var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
+            var postResource = postResourceAssembler.toResourceFromEntity(post.get());
             logger.info("Post created successfully with ID: {}", postResource.id());
             return new ResponseEntity<>(postResource, HttpStatus.CREATED);
 
         } catch (IllegalArgumentException e) {
-            logger.error("Validation error creating post with title: {} - {}", resource.title(), e.getMessage());
+            logger.error("Validation error creating post in community: {} - {}", resource.communityId(), e.getMessage());
             return ResponseEntity.badRequest().build();
         } catch (Exception e) {
-            logger.error("Unexpected error creating post with title: {}", resource.title(), e);
+            logger.error("Unexpected error creating post in community: {}", resource.communityId(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -141,7 +144,7 @@ public class PostController {
                 return ResponseEntity.notFound().build();
             }
 
-            var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
+            var postResource = postResourceAssembler.toResourceFromEntity(post.get());
             logger.debug("Post retrieved successfully with ID: {}", postId);
             return ResponseEntity.ok(postResource);
 
@@ -172,7 +175,7 @@ public class PostController {
             var posts = postQueryService.handle(query);
 
             var postResources = posts.stream()
-                    .map(PostResourceFromEntityAssembler::toResourceFromEntity)
+                    .map(postResourceAssembler::toResourceFromEntity)
                     .collect(Collectors.toList());
 
             logger.info("Retrieved {} posts successfully", postResources.size());
@@ -204,7 +207,7 @@ public class PostController {
             var posts = postQueryService.handle(query);
 
             var postResources = posts.stream()
-                    .map(PostResourceFromEntityAssembler::toResourceFromEntity)
+                    .map(postResourceAssembler::toResourceFromEntity)
                     .collect(Collectors.toList());
 
             logger.info("Retrieved {} posts for community {}", postResources.size(), communityId);
@@ -266,7 +269,7 @@ public class PostController {
                     .sorted((p1, p2) -> p2.createdAt().compareTo(p1.createdAt())) // Most recent first
                     .skip(offset)
                     .limit(limit)
-                    .map(PostResourceFromEntityAssembler::toResourceFromEntity)
+                    .map(postResourceAssembler::toResourceFromEntity)
                     .collect(Collectors.toList());
 
             logger.info("Retrieved {} feed posts for user {}", feedPosts.size(), userId);
@@ -320,7 +323,7 @@ public class PostController {
                 return ResponseEntity.notFound().build();
             }
 
-            var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
+            var postResource = postResourceAssembler.toResourceFromEntity(post.get());
             logger.info("Comment added successfully to post: {}", postId);
             return ResponseEntity.ok(postResource);
 
@@ -373,7 +376,7 @@ public class PostController {
                 return ResponseEntity.notFound().build();
             }
 
-            var postResource = PostResourceFromEntityAssembler.toResourceFromEntity(post.get());
+            var postResource = postResourceAssembler.toResourceFromEntity(post.get());
             logger.info("Comment deleted successfully: {} from post: {}", commentId, postId);
             return ResponseEntity.ok(postResource);
 

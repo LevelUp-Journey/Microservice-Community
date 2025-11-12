@@ -70,7 +70,6 @@ public class PostRepositoryAdapter implements PostRepository {
                 post.communityId().value(),
                 post.authorId().value(),
                 post.authorProfileId().value(),
-                post.title(),
                 post.content(),
                 post.imageUrl() != null && !post.imageUrl().isEmpty() ? post.imageUrl().url() : null,
                 post.createdAt()
@@ -84,7 +83,6 @@ public class PostRepositoryAdapter implements PostRepository {
                 CommunityId.of(entity.getCommunityId()),
                 UserId.of(entity.getAuthorId()),
                 ProfileId.of(entity.getAuthorProfileId()),
-                entity.getTitle(),
                 entity.getContent(),
                 imageUrl,
                 entity.getCreatedAt(),

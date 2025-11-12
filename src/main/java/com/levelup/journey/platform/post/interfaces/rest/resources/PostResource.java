@@ -9,10 +9,9 @@ import java.util.List;
  */
 public record PostResource(
         String id,
-        String communityId,
+        CommunityResource community,
         String authorId,
         String authorProfileId,
-        String title,
         String content,
         String imageUrl,
         Instant createdAt,

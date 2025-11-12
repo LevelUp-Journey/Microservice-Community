@@ -57,8 +57,8 @@ public class PostCommandServiceImpl implements PostCommandService {
         // Generate a new UUID for the post
         PostId postId = PostId.of(UUID.randomUUID().toString());
 
-        logger.info("Processing PublishPostCommand for generated post ID: {}, title: {}, communityId: {}, authorId: {}",
-                   postId.value(), command.title(), command.communityId(), command.authorId());
+        logger.info("Processing PublishPostCommand for generated post ID: {}, communityId: {}, authorId: {}",
+                   postId.value(), command.communityId(), command.authorId());
 
         try {
             ProfileId authorProfileId = resolveProfileId(command.authorId());
@@ -124,7 +124,6 @@ public class PostCommandServiceImpl implements PostCommandService {
                     command.communityId(),
                     command.authorId(),
                     authorProfileId,
-                    command.title(),
                     command.content(),
                     imageUrl
             );
@@ -175,7 +174,6 @@ public class PostCommandServiceImpl implements PostCommandService {
                     post.communityId(),
                     post.authorId(),
                     post.authorProfileId(),
-                    post.title(),
                     post.content(),
                     post.imageUrl(),
                     post.createdAt(),
@@ -228,7 +226,6 @@ public class PostCommandServiceImpl implements PostCommandService {
                     post.communityId(),
                     post.authorId(),
                     post.authorProfileId(),
-                    post.title(),
                     post.content(),
                     post.imageUrl(),
                     post.createdAt(),
@@ -281,7 +278,6 @@ public class PostCommandServiceImpl implements PostCommandService {
                     post.communityId(),
                     post.authorId(),
                     post.authorProfileId(),
-                    post.title(),
                     post.content(),
                     post.imageUrl(),
                     post.createdAt(),

@@ -47,11 +47,14 @@ public class CommunityController {
 
     private final CommunityCommandService communityCommandService;
     private final CommunityQueryService communityQueryService;
+    private final CommunityResourceFromEntityAssembler communityResourceAssembler;
 
     public CommunityController(CommunityCommandService communityCommandService,
-                              CommunityQueryService communityQueryService) {
+                              CommunityQueryService communityQueryService,
+                              CommunityResourceFromEntityAssembler communityResourceAssembler) {
         this.communityCommandService = communityCommandService;
         this.communityQueryService = communityQueryService;
+        this.communityResourceAssembler = communityResourceAssembler;
     }
 
     /**
@@ -96,7 +99,7 @@ public class CommunityController {
                 return ResponseEntity.badRequest().build();
             }
 
-            var communityResource = CommunityResourceFromEntityAssembler.toResourceFromEntity(community.get());
+            var communityResource = communityResourceAssembler.toResourceFromEntity(community.get());
             logger.info("Community created successfully with ID: {}", communityResource.id());
             return new ResponseEntity<>(communityResource, HttpStatus.CREATED);
 
@@ -142,7 +145,7 @@ public class CommunityController {
                 return ResponseEntity.notFound().build();
             }
 
-            var communityResource = CommunityResourceFromEntityAssembler.toResourceFromEntity(community.get());
+            var communityResource = communityResourceAssembler.toResourceFromEntity(community.get());
             logger.info("Community updated successfully with ID: {}", communityResource.id());
             return ResponseEntity.ok(communityResource);
 
@@ -230,7 +233,7 @@ public class CommunityController {
                 return ResponseEntity.notFound().build();
             }
 
-            var communityResource = CommunityResourceFromEntityAssembler.toResourceFromEntity(community.get());
+            var communityResource = communityResourceAssembler.toResourceFromEntity(community.get());
             logger.debug("Community retrieved successfully with ID: {}", communityId);
             return ResponseEntity.ok(communityResource);
 
@@ -261,7 +264,7 @@ public class CommunityController {
             var communities = communityQueryService.handle(query);
 
             var communityResources = communities.stream()
-                    .map(CommunityResourceFromEntityAssembler::toResourceFromEntity)
+                    .map(communityResourceAssembler::toResourceFromEntity)
                     .collect(Collectors.toList());
 
             logger.info("Retrieved {} communities successfully", communityResources.size());
@@ -298,7 +301,7 @@ public class CommunityController {
             var communities = communityQueryService.handle(query);
 
             var communityResources = communities.stream()
-                    .map(CommunityResourceFromEntityAssembler::toResourceFromEntity)
+                    .map(communityResourceAssembler::toResourceFromEntity)
                     .collect(Collectors.toList());
 
             logger.info("Retrieved {} communities for creator user ID: {}", communityResources.size(), creatorUserId);
