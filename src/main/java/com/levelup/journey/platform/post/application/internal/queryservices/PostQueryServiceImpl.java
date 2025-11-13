@@ -4,6 +4,7 @@ import com.levelup.journey.platform.post.domain.model.aggregates.Post;
 import com.levelup.journey.platform.post.domain.model.queries.GetAllPostsQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetPostByIdQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetPostsByCommunityIdQuery;
+import com.levelup.journey.platform.post.domain.model.queries.GetPostsBySourceIdsQuery;
 import com.levelup.journey.platform.post.domain.model.repositories.PostRepository;
 import com.levelup.journey.platform.post.domain.model.valueobjects.CommunityId;
 import com.levelup.journey.platform.post.domain.services.PostQueryService;
@@ -44,6 +45,14 @@ public class PostQueryServiceImpl implements PostQueryService {
     public List<Post> handle(GetPostsByCommunityIdQuery query) {
         // Use paginated repository method (sorting is handled by MongoDB query)
         return postRepository.findByCommunityId(query.communityId(), query.page(), query.size());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Post> handle(GetPostsBySourceIdsQuery query) {
+        // Calculate page number from offset
+        int page = query.offset() / query.limit();
+        return postRepository.findBySourceIds(query.sourceIds(), page, query.limit());
     }
 
     /**

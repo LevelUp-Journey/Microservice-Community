@@ -81,6 +81,17 @@ public class PostRepositoryAdapter implements PostRepository {
         mongoRepository.deleteById(id.value());
     }
 
+    @Override
+    public List<Post> findBySourceIds(List<String> sourceIds, int page, int size) {
+        if (sourceIds == null || sourceIds.isEmpty()) {
+            return List.of();
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        return mongoRepository.findByAuthorIdInOrCommunityIdInOrderByCreatedAtDesc(sourceIds, sourceIds, pageable).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
     /**
      * Find posts by community ID (deprecated - use paginated version)
      * @param communityId the community identifier

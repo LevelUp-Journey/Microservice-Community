@@ -1,8 +1,7 @@
 package com.levelup.journey.platform.social.domain.services;
 
 import com.levelup.journey.platform.social.domain.model.queries.GetFeedByUserIdQuery;
-
-import java.util.List;
+import com.levelup.journey.platform.social.interfaces.rest.resources.PaginatedFeedResource;
 
 /**
  * Feed Query Service
@@ -11,10 +10,10 @@ import java.util.List;
 public interface FeedQueryService {
 
     /**
-     * Handles the query to get a user's personalized feed
-     * Returns a list of post IDs that should appear in the user's feed
+     * Handles the query to get a user's personalized feed with enriched post and community metadata
+     * Returns paginated feed items with complete post information including community details
      * @param query the get feed by user id query
-     * @return list of post IDs for the feed
+     * @return paginated feed resource with enriched post data
      */
-    List<String> handle(GetFeedByUserIdQuery query);
+    PaginatedFeedResource handle(GetFeedByUserIdQuery query);
 }
