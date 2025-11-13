@@ -8,6 +8,7 @@ import com.levelup.journey.platform.social.domain.services.FeedQueryService;
 import com.levelup.journey.platform.social.domain.services.FollowQueryService;
 import com.levelup.journey.platform.social.domain.services.SubscriptionQueryService;
 import com.levelup.journey.platform.social.interfaces.rest.resources.FeedSourcesResource;
+import com.levelup.journey.platform.social.interfaces.rest.resources.PaginatedFeedResource;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -121,20 +122,23 @@ public class FeedController {
     }
 
     /**
-     * Get feed post IDs for a user with pagination
-     * Returns a list of post/content source IDs that should appear in the user's feed
+     * Get enriched feed for a user with pagination
+     * Returns a paginated list of posts with complete metadata including community information
      */
     @GetMapping("/{userId}")
     @Operation(
             summary = "Get feed for a user",
             description = "Retrieve a personalized feed for a user based on their follows and subscriptions. " +
-                    "Returns source IDs that can be used to fetch actual post content from the Post BC."
+                    "Returns posts with complete metadata including community name, author information, and reactions."
     )
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
                     description = "Feed retrieved successfully",
-                    content = @Content(mediaType = "application/json")
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = PaginatedFeedResource.class)
+                    )
             ),
             @ApiResponse(
                     responseCode = "400",
@@ -142,7 +146,7 @@ public class FeedController {
                     content = @Content
             )
     })
-    public ResponseEntity<List<String>> getFeed(
+    public ResponseEntity<PaginatedFeedResource> getFeed(
             @Parameter(description = "User ID (UUID format)", required = true)
             @PathVariable String userId,
 
@@ -152,7 +156,7 @@ public class FeedController {
             @Parameter(description = "Number of items to skip (default: 0)")
             @RequestParam(defaultValue = "0") int offset
     ) {
-        logger.info("Getting feed for user: {}, limit: {}, offset: {}", userId, limit, offset);
+        logger.info("Getting enriched feed for user: {}, limit: {}, offset: {}", userId, limit, offset);
 
         try {
             // Validate pagination parameters
@@ -168,11 +172,11 @@ public class FeedController {
 
             UserId userIdVO = UserId.of(userId);
             var query = new GetFeedByUserIdQuery(userIdVO, limit, offset);
-            var feedSources = feedQueryService.handle(query);
+            var feed = feedQueryService.handle(query);
 
-            logger.info("Retrieved {} feed sources for user {}", feedSources.size(), userId);
+            logger.info("Retrieved enriched feed with {} items for user {}", feed.content().size(), userId);
 
-            return ResponseEntity.ok(feedSources);
+            return ResponseEntity.ok(feed);
 
         } catch (IllegalArgumentException e) {
             logger.error("Invalid parameters: {}", e.getMessage());

@@ -7,6 +7,8 @@ import com.levelup.journey.platform.social.domain.model.valueobjects.Subscriptio
 import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.social.infrastructure.persistence.mongo.entities.SubscriptionEntity;
 import com.levelup.journey.platform.social.infrastructure.persistence.mongo.repositories.SubscriptionMongoRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -43,6 +45,19 @@ public class SubscriptionRepositoryAdapter implements SubscriptionRepository {
         return mongoRepository.findByUserId(userId.value()).stream()
                 .map(this::toDomain)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Subscription> findByUserId(UserId userId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return mongoRepository.findByUserId(userId.value(), pageable).stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public long countByUserId(UserId userId) {
+        return mongoRepository.countByUserId(userId.value());
     }
 
     @Override

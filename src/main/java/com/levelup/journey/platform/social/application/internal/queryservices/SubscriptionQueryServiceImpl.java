@@ -6,6 +6,7 @@ import com.levelup.journey.platform.social.domain.model.queries.GetSubscriptions
 import com.levelup.journey.platform.social.domain.model.queries.GetSubscriptionsByUserIdQuery;
 import com.levelup.journey.platform.social.domain.model.repositories.SubscriptionRepository;
 import com.levelup.journey.platform.social.domain.services.SubscriptionQueryService;
+import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,7 +32,12 @@ public class SubscriptionQueryServiceImpl implements SubscriptionQueryService {
 
     @Override
     public List<Subscription> handle(GetSubscriptionsByUserIdQuery query) {
-        return subscriptionRepository.findByUserId(query.userId());
+        return subscriptionRepository.findByUserId(query.userId(), query.page(), query.size());
+    }
+
+    @Override
+    public long countSubscriptionsByUser(UserId userId) {
+        return subscriptionRepository.countByUserId(userId);
     }
 
     @Override

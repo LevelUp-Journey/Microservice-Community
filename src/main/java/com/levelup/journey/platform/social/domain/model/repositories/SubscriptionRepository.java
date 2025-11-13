@@ -15,6 +15,8 @@ public interface SubscriptionRepository {
     Subscription save(Subscription subscription);
     Optional<Subscription> findById(SubscriptionId id);
     List<Subscription> findByUserId(UserId userId);
+    List<Subscription> findByUserId(UserId userId, int page, int size);
+    long countByUserId(UserId userId);
     List<Subscription> findByCommunityId(CommunityId communityId);
     Optional<Subscription> findByUserIdAndCommunityId(UserId userId, CommunityId communityId);
     void deleteById(SubscriptionId id);

@@ -4,6 +4,7 @@ import com.levelup.journey.platform.post.domain.model.aggregates.Post;
 import com.levelup.journey.platform.post.domain.model.queries.GetAllPostsQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetPostByIdQuery;
 import com.levelup.journey.platform.post.domain.model.queries.GetPostsByCommunityIdQuery;
+import com.levelup.journey.platform.post.domain.model.queries.GetPostsBySourceIdsQuery;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,4 +35,12 @@ public interface PostQueryService {
      * @return list of posts in the community
      */
     List<Post> handle(GetPostsByCommunityIdQuery query);
+
+    /**
+     * Handles the query to get posts by multiple source IDs (author IDs or community IDs) with pagination
+     * Used for generating personalized feeds
+     * @param query the get posts by source ids query
+     * @return list of posts from the specified sources, ordered by creation date (newest first)
+     */
+    List<Post> handle(GetPostsBySourceIdsQuery query);
 }

@@ -10,6 +10,7 @@ import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
 import com.levelup.journey.platform.social.domain.services.SubscriptionCommandService;
 import com.levelup.journey.platform.social.domain.services.SubscriptionQueryService;
 import com.levelup.journey.platform.social.interfaces.rest.resources.CreateSubscriptionResource;
+import com.levelup.journey.platform.social.interfaces.rest.resources.PagedResponse;
 import com.levelup.journey.platform.social.interfaces.rest.resources.SubscriptionResource;
 import com.levelup.journey.platform.social.interfaces.rest.transform.CreateSubscriptionCommandFromResourceAssembler;
 import com.levelup.journey.platform.shared.domain.acl.CommunityService;
@@ -128,20 +129,35 @@ public class SubscriptionController {
 
     @GetMapping("/user/{userId}")
     @Operation(summary = "Get user's subscriptions",
-               description = "Retrieve all communities a user is subscribed to")
+               description = "Retrieve all communities a user is subscribed to with pagination")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Subscriptions retrieved successfully")
+            @ApiResponse(responseCode = "200", description = "Subscriptions retrieved successfully",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = PagedResponse.class)))
     })
-    public ResponseEntity<List<SubscriptionResource>> getSubscriptionsByUser(@PathVariable String userId) {
+    public ResponseEntity<PagedResponse<SubscriptionResource>> getSubscriptionsByUser(
+            @PathVariable String userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         try {
-            var query = new GetSubscriptionsByUserIdQuery(UserId.of(userId));
+            // Validate parameters
+            if (page < 0) {
+                return ResponseEntity.badRequest().build();
+            }
+            if (size <= 0 || size > 100) {
+                return ResponseEntity.badRequest().build();
+            }
+
+            var query = new GetSubscriptionsByUserIdQuery(UserId.of(userId), page, size);
             var subscriptions = subscriptionQueryService.handle(query);
+            var totalElements = subscriptionQueryService.countSubscriptionsByUser(UserId.of(userId));
 
             var subscriptionResources = subscriptions.stream()
                     .map(subscription -> SubscriptionResourceFromEntityAssembler.toResourceFromEntity(subscription, communityService))
                     .collect(Collectors.toList());
 
-            return ResponseEntity.ok(subscriptionResources);
+            var pagedResponse = PagedResponse.of(subscriptionResources, page, size, totalElements);
+            return ResponseEntity.ok(pagedResponse);
 
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().build();
