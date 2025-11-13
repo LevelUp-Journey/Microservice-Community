@@ -4,6 +4,7 @@ import com.levelup.journey.platform.social.domain.model.aggregates.Subscription;
 import com.levelup.journey.platform.social.domain.model.queries.GetSubscriptionByIdQuery;
 import com.levelup.journey.platform.social.domain.model.queries.GetSubscriptionsByCommunityIdQuery;
 import com.levelup.journey.platform.social.domain.model.queries.GetSubscriptionsByUserIdQuery;
+import com.levelup.journey.platform.social.domain.model.valueobjects.UserId;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,13 @@ public interface SubscriptionQueryService {
      * @return list of subscriptions for the user
      */
     List<Subscription> handle(GetSubscriptionsByUserIdQuery query);
+
+    /**
+     * Counts the total number of subscriptions for a user
+     * @param userId the user ID
+     * @return the total count
+     */
+    long countSubscriptionsByUser(UserId userId);
 
     /**
      * Handles the query to get subscriptions by community ID
